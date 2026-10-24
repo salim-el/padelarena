@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Exceptions\BookingException;
+use App\Models\Booking;
+use App\Models\Court;
+use App\Services\BookingService;
+use App\Services\Clock;
+use Carbon\CarbonImmutable;
+use chillerlan\QRCode\QRCode;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class BookingController extends Controller
+{
+    public function __construct(private BookingService $bookings)
+    {
+    }
+
+    public function index(Request $request): Response
+    {
+        $items = Booking::with('court')->where('organizer_id', $request->user()->id)->orderByDesc('starts_at')->limit(50)->get();
+
+        return Inertia::render('bookings/index', ['bookings' => $items->map(fn ($b) => $this->present($b))->all()]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['court_id' => ['required', 'integer', 'exists:courts,id'], 'starts_at' => ['required', 'date']]);
+        try {
+            $booking = $this->bookings->hold($request->user(), Court::findOrFail($data['court_id']), CarbonImmutable::parse($data['starts_at'])->utc());
+        } catch (BookingException $e) {
+            return back()->withErrors(['booking' => $e->getMessage()]);
+        }
+
+        return to_route('bookings.checkout', $booking);
+    }
+
+    public function checkout(Request $request, Booking $booking): Response|RedirectResponse
+    {
+        $this->ensureOwner($request, $booking);
+        if ($booking->status !== 'pending_payment') {
+            return to_route('bookings.show', $booking);
+        }
+
+        return Inertia::render('bookings/checkout', ['booking' => $this->present($booking->load('court'))]);
+    }
+
+    public function pay(Request $request, Booking $booking): RedirectResponse
+    {
+        $this->ensureOwner($request, $booking);
+        $request->validate(['accept_terms' => ['accepted']]);
+        try {
+            $this->bookings->confirmPayment($booking, $request->user());
+        } catch (BookingException $e) {
+            return to_route('planning')->withErrors(['booking' => $e->getMessage()]);
+        }
+
+        return to_route('bookings.show', $booking)->with('success', 'Réservation confirmée. Votre facture est disponible.');
+    }
+
+    public function show(Request $request, Booking $booking): Response
+    {
+        $this->ensureOwner($request, $booking);
+        $booking->load('court', 'players.accessPass', 'invoices');
+        $player = $booking->players->firstWhere('is_organizer', true);
+        $pass = $player?->accessPass;
+        $qr = $pass && $pass->revoked_at === null && in_array($booking->status, ['confirmed', 'used'], true)
+            ? (new QRCode)->render(BookingService::passToken($player))
+            : null;
+
+        return Inertia::render('bookings/show', [
+            'booking' => $this->present($booking),
+            'qr' => $qr,
+            'qr_window' => $pass ? Clock::local($pass->valid_from)->format('H:i').' – '.Clock::local($pass->valid_until)->format('H:i') : null,
+            'invoices' => $booking->invoices->map(fn ($i) => ['number' => $i->number, 'total_cents' => $i->total_cents, 'vat_cents' => $i->vat_cents])->all(),
+        ]);
+    }
+
+    public function cancel(Request $request, Booking $booking): RedirectResponse
+    {
+        $this->ensureOwner($request, $booking);
+        try {
+            $booking = $this->bookings->cancel($booking, $request->user());
+        } catch (BookingException $e) {
+            return back()->withErrors(['booking' => $e->getMessage()]);
+        }
+        $message = $booking->status === 'cancelled_refunded'
+            ? 'Réservation annulée et remboursée. Une note de crédit a été émise.'
+            : 'Réservation annulée. Moins de 24 h avant le match, elle n’est pas remboursée.';
+
+        return to_route('bookings.show', $booking)->with('success', $message);
+    }
+
+    // La réservation d'un autre joueur répond 404 : un 403 confirmerait qu'elle existe.
+    private function ensureOwner(Request $request, Booking $booking): void
+    {
+        abort_unless($booking->organizer_id === $request->user()->id, 404);
+    }
+
+    private function present(Booking $b): array
+    {
+        $start = Clock::local($b->starts_at);
+
+        return [
+            'id' => $b->public_id,
+            'court' => $b->court->name,
+            'is_arena' => $b->is_arena,
+            'date' => $start->locale('fr')->isoFormat('dddd D MMMM YYYY'),
+            'time' => $start->format('H:i').' – '.Clock::local($b->ends_at)->format('H:i'),
+            'status' => $b->status,
+            'price_cents' => $b->price_cents,
+            'vat_rate' => (float) $b->vat_rate,
+            'hold_expires_at' => $b->hold_expires_at?->toIso8601String(),
+            'free_cancellation_until' => Clock::local($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS))->locale('fr')->isoFormat('dddd D MMMM [à] HH:mm'),
+            'cancellable' => $b->status === 'confirmed' && $b->starts_at->isFuture(),
+        ];
+    }
+}

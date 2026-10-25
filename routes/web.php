@@ -5,10 +5,25 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\KioskController;
 use App\Http\Controllers\PlanningController;
+use App\Models\PricingRule;
 use Inertia\Inertia;
 
-// L'accueil et le tableau de bord du kit mènent au planning, cœur du produit.
-Route::redirect('/', '/planning')->name('home');
+Route::get('/', fn () => Inertia::render('home', [
+    'prices' => PricingRule::query()
+        ->whereDate('valid_from', '<=', today())
+        ->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', today()))
+        ->orderBy('is_arena')->orderBy('start_time')
+        ->get()
+        ->map(fn (PricingRule $r) => [
+            'name' => $r->name,
+            'start' => substr($r->start_time, 0, 5),
+            'end' => substr($r->end_time, 0, 5),
+            'price_cents' => $r->price_cents,
+            'is_arena' => $r->is_arena,
+        ]),
+]))->name('home');
+
+// Le tableau de bord du kit mène au planning, cœur du produit.
 
 Route::get('planning', PlanningController::class)->name('planning');
 

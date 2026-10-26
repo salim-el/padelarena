@@ -90,9 +90,9 @@ class BookingService
     }
 
     /** Paiement simulé de l'alpha. En production, la confirmation viendra de la notification signée de Stripe. */
-    public function confirmPayment(Booking $booking, User $user): Booking
+    public function confirmPayment(Booking $booking, User $user, ?string $gameMode = null): Booking
     {
-        return DB::transaction(function () use ($booking, $user) {
+        return DB::transaction(function () use ($booking, $user, $gameMode) {
             $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
             if ($user->status !== 'active') {
                 throw new BookingException('Votre compte est suspendu. Le paiement est refusé.');
@@ -130,7 +130,8 @@ class BookingService
                 'valid_from' => $booking->starts_at->subMinutes(15),
                 'valid_until' => $booking->ends_at,
             ]);
-            $booking->update(['hold_expires_at' => null]);
+            // Le mode choisi par le joueur ne vaut que sur le terrain Arena ; jeu libre par défaut.
+            $booking->update(['hold_expires_at' => null, 'game_mode' => $booking->is_arena ? ($gameMode ?? 'jeu_libre') : null]);
             $this->transition($booking, 'confirmed', 'Paiement reçu.', $user->id);
 
             return $booking->fresh();

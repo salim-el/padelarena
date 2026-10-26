@@ -12,8 +12,8 @@ return new class extends Migration
         Schema::table('bookings', function (Blueprint $table) {
             $table->string('game_mode', 20)->nullable();
         });
-        // Un mode de jeu n'a de sens que sur le terrain Arena.
-        DB::statement("ALTER TABLE bookings ADD CONSTRAINT bookings_game_mode_check CHECK (game_mode IS NULL OR (is_arena AND game_mode IN ('chasse_aux_zones', 'duel', 'jeu_libre')))");
+        // Une partie arcade a toujours un mode, une partie classique jamais.
+        DB::statement("ALTER TABLE bookings ADD CONSTRAINT bookings_game_mode_check CHECK (is_arena = (game_mode IS NOT NULL) AND (game_mode IS NULL OR game_mode IN ('zone_hunt', 'duel', 'free')))");
     }
 
     public function down(): void

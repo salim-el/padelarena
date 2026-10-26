@@ -16,13 +16,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         foreach (range(1, 6) as $i) {
-            Court::create(['name' => "Terrain $i", 'is_arena' => $i === 4]);
+            Court::create(['name' => "Terrain $i", 'is_arena' => true]);
         }
         // TVA de 6 % : accès aux installations sportives.
         $rules = [
             ['Heures creuses', '09:00', '17:00', 3360, false],
             ['Heures pleines', '17:00', '23:00', 4800, false],
-            ['Arena heures creuses', '09:00', '17:00', 4340, true],
+            ['Arena heures creuses', '09:00', '17:00', 4760, true],
             ['Arena heures pleines', '17:00', '23:00', 6200, true],
         ];
         foreach ($rules as [$name, $start, $end, $price, $arena]) {

@@ -7,23 +7,38 @@ import { CalendarDays, CreditCard, QrCode, Swords, Target, Trophy } from 'lucide
 type Price = { name: string; start: string; end: string; price_cents: number; is_arena: boolean };
 
 const NAVY = 'bg-[#0E1B2C] text-[#F7F6F1]';
-const CTA = 'inline-flex items-center justify-center rounded-lg bg-[#C8E64A] px-6 py-3 font-bold text-[#0E1B2C] transition hover:bg-[#b5d23c] focus-visible:ring-2 focus-visible:ring-[#C8E64A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E1B2C] focus-visible:outline-none';
-const GHOST = 'inline-flex items-center justify-center rounded-lg border border-[#F7F6F1]/40 px-6 py-3 font-semibold text-[#F7F6F1] transition hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#C8E64A] focus-visible:outline-none';
+const CTA =
+    'inline-flex items-center justify-center rounded-lg bg-[#C8E64A] px-6 py-3 font-bold text-[#0E1B2C] transition hover:bg-[#b5d23c] focus-visible:ring-2 focus-visible:ring-[#C8E64A] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E1B2C] focus-visible:outline-none';
+const GHOST =
+    'inline-flex items-center justify-center rounded-lg border border-[#F7F6F1]/40 px-6 py-3 font-semibold text-[#F7F6F1] transition hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-[#C8E64A] focus-visible:outline-none';
 
-// Terrain vu du dessus. En mode Arena, les zones vertes donnent des points, la zone corail en retire.
-function ArenaCourt() {
+// Photo en deux tailles : le navigateur choisit la plus légère qui suffit à l'écran.
+function Photo({
+    name,
+    alt,
+    className = '',
+    priority = false,
+    sizes = '100vw',
+}: {
+    name: string;
+    alt: string;
+    className?: string;
+    priority?: boolean;
+    sizes?: string;
+}) {
     return (
-        <svg viewBox="0 0 200 400" className="h-auto w-full max-w-[260px]" role="img" aria-label="Terrain de padel vu du dessus, avec des zones lumineuses du mode Arena">
-            <rect x="4" y="4" width="192" height="392" rx="6" fill="#1D5C7A" stroke="#F7F6F1" strokeWidth="3" />
-            <line x1="4" y1="200" x2="196" y2="200" stroke="#F7F6F1" strokeWidth="4" />
-            <line x1="4" y1="70" x2="196" y2="70" stroke="#F7F6F1" strokeWidth="2" />
-            <line x1="4" y1="330" x2="196" y2="330" stroke="#F7F6F1" strokeWidth="2" />
-            <line x1="100" y1="70" x2="100" y2="330" stroke="#F7F6F1" strokeWidth="2" />
-            <rect x="12" y="78" width="80" height="58" rx="4" fill="#C8E64A" opacity="0.85" className="motion-safe:animate-pulse" />
-            <rect x="108" y="264" width="80" height="58" rx="4" fill="#C8E64A" opacity="0.85" className="motion-safe:animate-pulse" />
-            <rect x="108" y="140" width="80" height="52" rx="4" fill="#CC3342" opacity="0.8" />
-            <circle cx="56" cy="250" r="9" fill="#F7F6F1" />
-        </svg>
+        <img
+            src={`/images/${name}-1600.webp`}
+            srcSet={`/images/${name}-800.webp 800w, /images/${name}-1600.webp 1600w`}
+            sizes={sizes}
+            width={1600}
+            height={900}
+            alt={alt}
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
+            decoding="async"
+            className={className}
+        />
     );
 }
 
@@ -46,10 +61,16 @@ export default function Home({ prices }: { prices: Price[] }) {
     return (
         <>
             <Head title="Padel indoor à Anderlecht">
-                <meta name="description" content="Six terrains de padel couverts à Anderlecht, dont un terrain Arena aux zones lumineuses. Réservation en ligne, paiement sécurisé, accès par QR code." />
+                <meta
+                    name="description"
+                    content="Six terrains de padel couverts à Anderlecht, dont un terrain Arena aux zones lumineuses. Réservation en ligne, paiement sécurisé, accès par QR code."
+                />
             </Head>
             <div className="min-h-screen bg-[#F7F6F1] text-[#0E1B2C]">
-                <a href="#contenu" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+                <a
+                    href="#contenu"
+                    className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2"
+                >
                     Aller au contenu
                 </a>
 
@@ -62,26 +83,50 @@ export default function Home({ prices }: { prices: Price[] }) {
                             PadelArena
                         </Link>
                         <ul className="hidden items-center gap-6 text-sm font-semibold md:flex">
-                            <li><a href="#arena" className="hover:text-[#C8E64A]">Mode Arena</a></li>
-                            <li><a href="#comment" className="hover:text-[#C8E64A]">Comment ça marche</a></li>
-                            <li><a href="#tarifs" className="hover:text-[#C8E64A]">Tarifs</a></li>
-                            <li><Link href="/planning" className="hover:text-[#C8E64A]">Planning</Link></li>
+                            <li>
+                                <a href="#arena" className="hover:text-[#C8E64A]">
+                                    Mode Arena
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#comment" className="hover:text-[#C8E64A]">
+                                    Comment ça marche
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#tarifs" className="hover:text-[#C8E64A]">
+                                    Tarifs
+                                </a>
+                            </li>
+                            <li>
+                                <Link href="/planning" className="hover:text-[#C8E64A]">
+                                    Planning
+                                </Link>
+                            </li>
                         </ul>
                         <div className="flex items-center gap-3">
                             {auth.user ? (
-                                <Link href="/bookings" className="text-sm font-semibold hover:text-[#C8E64A]">Mon espace</Link>
+                                <Link href="/bookings" className="text-sm font-semibold hover:text-[#C8E64A]">
+                                    Mon espace
+                                </Link>
                             ) : (
-                                <Link href="/login" className="text-sm font-semibold hover:text-[#C8E64A]">Connexion</Link>
+                                <Link href="/login" className="text-sm font-semibold hover:text-[#C8E64A]">
+                                    Connexion
+                                </Link>
                             )}
-                            <Link href="/planning" className={`${CTA} px-4 py-2 text-sm`}>Réserver</Link>
+                            <Link href="/planning" className={`${CTA} px-4 py-2 text-sm`}>
+                                Réserver
+                            </Link>
                         </div>
                     </nav>
                 </header>
 
                 <main id="contenu">
-                    <section className={`${NAVY} overflow-hidden`}>
-                        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-12 pb-20 md:grid-cols-[1.4fr_1fr]">
-                            <div>
+                    <section className={`${NAVY} relative overflow-hidden`}>
+                        <Photo name="hero" alt="" priority className="absolute inset-0 h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#0E1B2C] via-[#0E1B2C]/85 to-[#0E1B2C]/20" aria-hidden />
+                        <div className="relative mx-auto max-w-6xl px-4 pt-20 pb-32 md:pt-28 md:pb-40">
+                            <div className="max-w-2xl">
                                 <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Nouveau · Terrain 4</p>
                                 <h1 className="mt-3 text-4xl leading-tight font-extrabold uppercase md:text-6xl">
                                     Le padel,
@@ -89,21 +134,22 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     <span className="text-[#C8E64A]">version arcade.</span>
                                 </h1>
                                 <p className="mt-5 max-w-xl text-lg text-[#F7F6F1]/85">
-                                    Six terrains couverts à Anderlecht. Sur le terrain Arena, les vitres s’allument, les zones donnent des points et le
-                                    score s’affiche en direct.
+                                    Six terrains couverts à Anderlecht. Sur le terrain Arena, les vitres s’allument, les zones donnent des points et
+                                    le score s’affiche en direct.
                                 </p>
                                 <div className="mt-8 flex flex-wrap gap-3">
-                                    <Link href="/planning" className={CTA}>Réserver un terrain</Link>
-                                    <a href="#arena" className={GHOST}>Découvrir le mode Arena</a>
+                                    <Link href="/planning" className={CTA}>
+                                        Réserver un terrain
+                                    </Link>
+                                    <a href="#arena" className={GHOST}>
+                                        Découvrir le mode Arena
+                                    </a>
                                 </div>
-                            </div>
-                            <div className="flex justify-center">
-                                <ArenaCourt />
                             </div>
                         </div>
                     </section>
 
-                    <section aria-label="Le club en chiffres" className="mx-auto -mt-10 max-w-6xl px-4">
+                    <section aria-label="Le club en chiffres" className="relative z-10 mx-auto -mt-10 max-w-6xl px-4">
                         <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-6 shadow-lg md:grid-cols-4">
                             {[
                                 ['6', 'terrains couverts'],
@@ -122,17 +168,39 @@ export default function Home({ prices }: { prices: Price[] }) {
 
                     <section id="arena" className="mt-20 bg-[#0A1420] py-20 text-[#F7F6F1]">
                         <div className="mx-auto max-w-6xl px-4">
-                            <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode Arena</p>
-                            <h2 className="mt-2 text-3xl font-extrabold uppercase md:text-4xl">Votre match devient une partie</h2>
-                            <p className="mt-4 max-w-2xl text-[#F7F6F1]/80">
-                                Des LED dans les cadres des vitres et un éclairage par zone transforment le terrain 4. Le gérant lance un scénario, le
-                                terrain s’allume, et chaque échange peut rapporter ou coûter des points.
-                            </p>
+                            <div className="grid items-center gap-10 md:grid-cols-2">
+                                <div>
+                                    <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode Arena</p>
+                                    <h2 className="mt-2 text-3xl font-extrabold uppercase md:text-4xl">Votre match devient une partie</h2>
+                                    <p className="mt-4 max-w-2xl text-[#F7F6F1]/80">
+                                        Des LED dans les cadres des vitres et un éclairage par zone transforment le terrain 4. Le gérant lance un
+                                        scénario, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
+                                    </p>
+                                </div>
+                                <Photo
+                                    name="arena"
+                                    sizes="(min-width: 768px) 50vw, 100vw"
+                                    alt="Balle qui rebondit dans une zone lumineuse verte, sur le terrain Arena éclairé par des LED"
+                                    className="aspect-video w-full rounded-2xl object-cover shadow-[0_0_40px_rgba(200,230,74,0.25)]"
+                                />
+                            </div>
                             <ul className="mt-10 grid gap-4 md:grid-cols-3">
                                 {[
-                                    { icon: Target, title: 'Chasse aux zones', text: 'Une zone verte s’allume. Placez la balle dedans pour marquer des points bonus avant qu’elle ne change de place.' },
-                                    { icon: Swords, title: 'Duel', text: 'Deux équipes, deux couleurs. Chaque zone gagnée reste allumée à vos couleurs jusqu’au prochain point.' },
-                                    { icon: Trophy, title: 'Jeu libre', text: 'Un match classique avec l’ambiance Arena : lumière, son et score affiché sur l’écran du terrain.' },
+                                    {
+                                        icon: Target,
+                                        title: 'Chasse aux zones',
+                                        text: 'Une zone verte s’allume. Placez la balle dedans pour marquer des points bonus avant qu’elle ne change de place.',
+                                    },
+                                    {
+                                        icon: Swords,
+                                        title: 'Duel',
+                                        text: 'Deux équipes, deux couleurs. Chaque zone gagnée reste allumée à vos couleurs jusqu’au prochain point.',
+                                    },
+                                    {
+                                        icon: Trophy,
+                                        title: 'Jeu libre',
+                                        text: 'Un match classique avec l’ambiance Arena : lumière, son et score affiché sur l’écran du terrain.',
+                                    },
                                 ].map(({ icon: Icon, title, text }) => (
                                     <li key={title} className="rounded-xl border border-[#C8E64A]/30 bg-[#17304A] p-6">
                                         <Icon className="size-8 text-[#C8E64A]" aria-hidden />
@@ -142,37 +210,63 @@ export default function Home({ prices }: { prices: Price[] }) {
                                 ))}
                             </ul>
                             <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#F7F6F1]/80">
-                                <span className="flex items-center gap-2"><span className="inline-block size-3 shrink-0 rounded-sm bg-[#C8E64A]" aria-hidden /> zone bonus</span>
-                                <span className="flex items-center gap-2"><span className="inline-block size-3 shrink-0 rounded-sm bg-[#CC3342]" aria-hidden /> zone malus : la balle qui y tombe coûte des points</span>
+                                <span className="flex items-center gap-2">
+                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#C8E64A]" aria-hidden /> zone bonus
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#CC3342]" aria-hidden /> zone malus : la balle qui y
+                                    tombe coûte des points
+                                </span>
                             </p>
-                            <Link href="/planning" className={`${CTA} mt-8`}>Réserver le terrain Arena</Link>
+                            <Link href="/planning" className={`${CTA} mt-8`}>
+                                Réserver le terrain Arena
+                            </Link>
                         </div>
                     </section>
 
                     <section id="comment" className="mx-auto max-w-6xl px-4 py-20">
                         <h2 className="text-3xl font-extrabold uppercase">Comment ça marche</h2>
                         <ol className="mt-8 grid gap-4 md:grid-cols-3">
-                            <Step icon={CalendarDays} title="1. Choisissez un créneau" text="Le planning montre les terrains libres en temps réel, sans compte. Un créneau dure 90 minutes." />
-                            <Step icon={CreditCard} title="2. Payez en ligne" text="Le créneau est bloqué 10 minutes pour vous. Facture immédiate, annulation remboursée jusqu’à 24 h avant." />
-                            <Step icon={QrCode} title="3. Entrez avec votre QR code" text="Votre QR code personnel ouvre le terrain 15 minutes avant le début. Pas de clé, pas d’attente à l’accueil." />
+                            <Step
+                                icon={CalendarDays}
+                                title="1. Choisissez un créneau"
+                                text="Le planning montre les terrains libres en temps réel, sans compte. Un créneau dure 90 minutes."
+                            />
+                            <Step
+                                icon={CreditCard}
+                                title="2. Payez en ligne"
+                                text="Le créneau est bloqué 10 minutes pour vous. Facture immédiate, annulation remboursée jusqu’à 24 h avant."
+                            />
+                            <Step
+                                icon={QrCode}
+                                title="3. Entrez avec votre QR code"
+                                text="Votre QR code personnel ouvre le terrain 15 minutes avant le début. Pas de clé, pas d’attente à l’accueil."
+                            />
                         </ol>
                     </section>
 
                     <section id="tarifs" className="bg-white py-20">
                         <div className="mx-auto max-w-6xl px-4">
                             <h2 className="text-3xl font-extrabold uppercase">Tarifs</h2>
-                            <p className="mt-2 text-[#5F6B78]">Prix par terrain et par créneau de 90 minutes, TVA de 6 % comprise. À partager entre les joueurs.</p>
+                            <p className="mt-2 text-[#5F6B78]">
+                                Prix par terrain et par créneau de 90 minutes, TVA de 6 % comprise. À partager entre les joueurs.
+                            </p>
                             <div className="mt-8 grid gap-4 md:grid-cols-2">
                                 {[
                                     { title: 'Terrains classiques', rows: classic, highlight: false },
                                     { title: 'Terrain Arena', rows: arena, highlight: true },
                                 ].map(({ title, rows, highlight }) => (
-                                    <div key={title} className={`rounded-xl border p-6 ${highlight ? 'border-[#C8E64A] bg-[#0E1B2C] text-[#F7F6F1]' : 'border-[#DAD7CC]'}`}>
+                                    <div
+                                        key={title}
+                                        className={`rounded-xl border p-6 ${highlight ? 'border-[#C8E64A] bg-[#0E1B2C] text-[#F7F6F1]' : 'border-[#DAD7CC]'}`}
+                                    >
                                         <h3 className="text-xl font-bold">{title}</h3>
                                         <ul className="mt-4 divide-y divide-current/10">
                                             {rows.map((p) => (
                                                 <li key={p.name} className="flex justify-between py-3">
-                                                    <span>{p.name.replace('Arena ', '').replace(/^./, (c) => c.toUpperCase())} · {p.start} – {p.end}</span>
+                                                    <span>
+                                                        {p.name.replace('Arena ', '').replace(/^./, (c) => c.toUpperCase())} · {p.start} – {p.end}
+                                                    </span>
                                                     <strong>{euros(p.price_cents)}</strong>
                                                 </li>
                                             ))}
@@ -183,10 +277,16 @@ export default function Home({ prices }: { prices: Price[] }) {
                         </div>
                     </section>
 
-                    <section className={`${NAVY} py-16 text-center`}>
-                        <h2 className="text-3xl font-extrabold uppercase md:text-4xl">Prêt à jouer ?</h2>
-                        <p className="mt-3 text-[#F7F6F1]/80">Les créneaux du soir partent vite. Réservez en moins d’une minute.</p>
-                        <Link href="/planning" className={`${CTA} mt-6`}>Voir les créneaux libres</Link>
+                    <section className={`${NAVY} relative overflow-hidden py-24 text-center`}>
+                        <Photo name="joueurs" alt="" className="absolute inset-0 h-full w-full object-cover" />
+                        <div className="absolute inset-0 bg-[#0E1B2C]/75" aria-hidden />
+                        <div className="relative">
+                            <h2 className="text-3xl font-extrabold uppercase md:text-4xl">Prêt à jouer ?</h2>
+                            <p className="mt-3 text-[#F7F6F1]/80">Les créneaux du soir partent vite. Réservez en moins d’une minute.</p>
+                            <Link href="/planning" className={`${CTA} mt-6`}>
+                                Voir les créneaux libres
+                            </Link>
+                        </div>
                     </section>
                 </main>
 
@@ -194,8 +294,12 @@ export default function Home({ prices }: { prices: Price[] }) {
                     <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-4 px-4">
                         <p>Arena Padel Club · Anderlecht, Bruxelles</p>
                         <nav aria-label="Liens du pied de page" className="flex gap-4">
-                            <Link href="/planning" className="hover:text-[#C8E64A]">Planning</Link>
-                            <Link href={auth.user ? '/bookings' : '/login'} className="hover:text-[#C8E64A]">{auth.user ? 'Mes réservations' : 'Connexion'}</Link>
+                            <Link href="/planning" className="hover:text-[#C8E64A]">
+                                Planning
+                            </Link>
+                            <Link href={auth.user ? '/bookings' : '/login'} className="hover:text-[#C8E64A]">
+                                {auth.user ? 'Mes réservations' : 'Connexion'}
+                            </Link>
                         </nav>
                     </div>
                 </footer>

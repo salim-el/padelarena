@@ -1,15 +1,21 @@
-import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/page-header';
 import AppLayout from '@/layouts/app-layout';
-import { euros } from '@/lib/money';
+import { euros, ucfirst } from '@/lib/money';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Cell = { court_id: number; available: boolean; price_cents: number | null; past: boolean; off_peak: boolean };
 type Row = { time: string; end: string; starts_at: string; cells: Cell[] };
-type Props = { date: string; today: string; max: string; courts: { id: number; name: string; is_arena: boolean }[]; rows: Row[] };
+type Court = { id: number; name: string; is_arena: boolean };
+type Props = { date: string; today: string; max: string; courts: Court[]; rows: Row[] };
+
+const NAV =
+    'inline-flex size-9 items-center justify-center rounded-lg border border-[#F7F6F1]/30 text-[#F7F6F1] transition hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent';
 
 export default function Planning({ date, today, max, courts, rows }: Props) {
     const { auth, errors } = usePage<SharedData & { errors: Record<string, string> }>().props;
+    const label = new Date(`${date}T12:00:00`).toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const goTo = (d: string) => router.get('/planning', { date: d }, { preserveScroll: true, preserveState: true });
     // Décalage en jours sur la date locale, sans passer par le fuseau UTC.
@@ -24,50 +30,123 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
         router.post('/bookings', { court_id: cell.court_id, starts_at: row.starts_at });
     };
 
+    const slotClass = (court: Court, cell: Cell) => {
+        if (court.is_arena) return 'border-[#C8E64A]/60 bg-[#0E1B2C] text-[#C8E64A] hover:bg-[#17304A]';
+        if (cell.off_peak) return 'border-[#1D5C7A]/25 bg-[#E3F0F7] text-[#1D5C7A] hover:bg-[#cfe6f2]';
+        return 'border-[#DAD7CC] bg-white text-[#0E1B2C] hover:border-[#C8E64A] hover:bg-[#EEF4D6]';
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Planning', href: '/planning' }]}>
             <Head title="Planning" />
-            <div className="flex flex-col gap-4 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-2xl font-bold">Choisissez un créneau</h1>
-                    <Button variant="outline" size="sm" disabled={date <= today} onClick={() => goTo(shift(-1))}>‹ Jour précédent</Button>
-                    <label className="sr-only" htmlFor="date">Date</label>
-                    <input id="date" type="date" min={today} max={max} value={date} className="rounded-md border px-2 py-1"
-                        onChange={(e) => /^20\d{2}-\d{2}-\d{2}$/.test(e.target.value) && goTo(e.target.value)} />
-                    <Button variant="outline" size="sm" disabled={date >= max} onClick={() => goTo(shift(1))}>Jour suivant ›</Button>
-                </div>
-                {errors.date && <p role="alert" className="rounded-md border border-[#9E2833]/30 bg-[#FCE6E8] text-[#9E2833] p-3 text-sm">Choisissez une date entre aujourd’hui et le {max.split('-').reverse().join('/')}.</p>}
-                {errors.booking && <p role="alert" className="rounded-md border border-[#9E2833]/30 bg-[#FCE6E8] text-[#9E2833] p-3 text-sm">{errors.booking}</p>}
-                <div className="overflow-x-auto rounded-xl border">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b">
-                                <th className="p-2 text-left">Créneau</th>
-                                {courts.map((c) => <th key={c.id} className="p-2 text-left">{c.name}{c.is_arena ? ' · Arena' : ''}</th>)}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.map((row) => (
-                                <tr key={row.time} className="border-b last:border-0">
-                                    <td className="p-2 whitespace-nowrap">{row.time} – {row.end}</td>
-                                    {row.cells.map((cell) => (
-                                        <td key={cell.court_id} className="p-1">
-                                            {cell.available ? (
-                                                <Button variant="outline" size="sm" className={`w-full ${cell.off_peak ? 'border-[#1D5C7A]/30 bg-[#E3F0F7] text-[#1D5C7A]' : ''}`} onClick={() => book(cell, row)}>
-                                                    {euros(cell.price_cents)}{cell.off_peak ? ' · creuse' : ''}
-                                                </Button>
-                                            ) : (
-                                                <span className="block rounded-md bg-[#ECEAE3] p-1 text-center text-[#6B7480]">{cell.past ? 'Passé' : 'Complet'}</span>
+            <div className="flex flex-col gap-5 p-4">
+                <PageHeader eyebrow="Réserver un terrain" title="Choisissez un créneau">
+                    <div className="flex items-center gap-2">
+                        <button type="button" className={NAV} disabled={date <= today} onClick={() => goTo(shift(-1))} aria-label="Jour précédent">
+                            <ChevronLeft className="size-5" />
+                        </button>
+                        <label className="sr-only" htmlFor="date">
+                            Date
+                        </label>
+                        <input
+                            id="date"
+                            type="date"
+                            min={today}
+                            max={max}
+                            value={date}
+                            className="rounded-lg border border-[#F7F6F1]/30 bg-[#17304A] px-3 py-1.5 text-[#F7F6F1] [color-scheme:dark]"
+                            onChange={(e) => /^20\d{2}-\d{2}-\d{2}$/.test(e.target.value) && goTo(e.target.value)}
+                        />
+                        <button type="button" className={NAV} disabled={date >= max} onClick={() => goTo(shift(1))} aria-label="Jour suivant">
+                            <ChevronRight className="size-5" />
+                        </button>
+                    </div>
+                </PageHeader>
+
+                {errors.date && (
+                    <p role="alert" className="rounded-lg border border-[#9E2833]/30 bg-[#FCE6E8] p-3 text-sm text-[#9E2833]">
+                        Choisissez une date entre aujourd’hui et le {max.split('-').reverse().join('/')}.
+                    </p>
+                )}
+                {errors.booking && (
+                    <p role="alert" className="rounded-lg border border-[#9E2833]/30 bg-[#FCE6E8] p-3 text-sm text-[#9E2833]">
+                        {errors.booking}
+                    </p>
+                )}
+
+                <section className="bg-card overflow-hidden rounded-2xl border shadow-sm">
+                    <h2 className="border-b px-4 py-3 font-semibold">{ucfirst(label)}</h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-separate border-spacing-1.5 text-sm">
+                            <thead>
+                                <tr>
+                                    <th className="px-2 py-1 text-left text-xs font-semibold tracking-wide text-[#5F6B78] uppercase">Créneau</th>
+                                    {courts.map((c) => (
+                                        <th key={c.id} className="min-w-28 px-2 py-1 text-left">
+                                            <span className="font-bold">{c.name}</span>
+                                            {c.is_arena && (
+                                                <span className="ml-2 rounded-full bg-[#C8E64A] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#0E1B2C] uppercase">
+                                                    Arena
+                                                </span>
                                             )}
-                                        </td>
+                                        </th>
                                     ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {rows.map((row) => (
+                                    <tr key={row.time}>
+                                        <td className="px-2 font-mono text-xs font-semibold whitespace-nowrap text-[#17304A] dark:text-[#F7F6F1]">
+                                            {row.time}
+                                            <span className="block text-[#5F6B78]">{row.end}</span>
+                                        </td>
+                                        {row.cells.map((cell, i) => (
+                                            <td key={cell.court_id}>
+                                                {cell.available ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => book(cell, row)}
+                                                        className={`w-full rounded-lg border px-2 py-2.5 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(courts[i], cell)}`}
+                                                    >
+                                                        {euros(cell.price_cents)}
+                                                        {cell.off_peak && (
+                                                            <span className="block text-[11px] font-normal opacity-80">heure creuse</span>
+                                                        )}
+                                                    </button>
+                                                ) : (
+                                                    <span className="block rounded-lg border border-dashed border-[#DAD7CC] px-2 py-2.5 text-center text-xs text-[#6B7480]">
+                                                        {cell.past ? 'Passé' : 'Complet'}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#5F6B78]">
+                    <span className="flex items-center gap-2">
+                        <span className="size-3 rounded-sm border border-[#DAD7CC] bg-white" aria-hidden /> Heure pleine
+                    </span>
+                    <span className="flex items-center gap-2">
+                        <span className="size-3 rounded-sm bg-[#E3F0F7]" aria-hidden /> Heure creuse
+                    </span>
+                    <span className="flex items-center gap-2">
+                        <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Terrain Arena
+                    </span>
+                    <span>Prix TTC par créneau de 90 minutes, TVA de 6 % comprise. Annulation remboursée jusqu’à 24 h avant.</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Prix TTC par créneau de 90 minutes, TVA de 6 % comprise. Annulation remboursée jusqu’à 24 h avant le match.</p>
-                {!auth.user && <p className="text-sm"><Link href="/login" className="underline">Connectez-vous</Link> pour réserver.</p>}
+                {!auth.user && (
+                    <p className="text-sm">
+                        <Link href="/login" className="font-semibold underline">
+                            Connectez-vous
+                        </Link>{' '}
+                        pour réserver.
+                    </p>
+                )}
             </div>
         </AppLayout>
     );

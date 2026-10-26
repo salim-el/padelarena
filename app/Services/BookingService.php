@@ -48,7 +48,7 @@ class BookingService
         if (! in_array(Clock::local($startUtc)->format('H:i'), Clock::SLOTS, true) || ! $startUtc->isFuture() || $startUtc->gt(now()->addDays(30))) {
             throw new BookingException('Ce créneau n’existe pas ou n’est plus réservable.');
         }
-        $rule = $this->slots->priceFor($court, $startUtc);
+        $rule = $this->slots->priceFor($startUtc);
         if ($rule === null || ! $court->is_active) {
             throw new BookingException('Ce terrain n’est pas réservable à cette heure.');
         }
@@ -72,7 +72,7 @@ class BookingService
                     'status' => 'pending_payment',
                     'price_cents' => $rule->price_cents,
                     'vat_rate' => $rule->vat_rate,
-                    'is_arena' => $court->is_arena,
+                    'is_arena' => false,
                     'hold_expires_at' => now()->addMinutes(self::HOLD_MINUTES),
                 ]));
             } catch (QueryException $e) {
@@ -101,6 +101,15 @@ class BookingService
                 throw new BookingException('Les dix minutes sont écoulées. Le créneau a été libéré, rien n’a été débité.');
             }
             $player = $booking->players()->where('is_organizer', true)->firstOrFail();
+            // Un mode arcade remplace le prix classique par le tarif arcade du même créneau (+14 €).
+            if ($gameMode !== null && $gameMode !== 'classic') {
+                $rule = $this->slots->priceFor($booking->starts_at, true);
+                if ($rule === null) {
+                    throw new BookingException('Le mode arcade n’est pas disponible sur ce créneau.');
+                }
+                $booking->update(['is_arena' => true, 'game_mode' => $gameMode, 'pricing_rule_id' => $rule->id, 'price_cents' => $rule->price_cents, 'vat_rate' => $rule->vat_rate]);
+                $player->update(['share_cents' => $rule->price_cents]);
+            }
             $payment = Payment::create([
                 'booking_id' => $booking->id,
                 'booking_player_id' => $player->id,
@@ -130,8 +139,7 @@ class BookingService
                 'valid_from' => $booking->starts_at->subMinutes(15),
                 'valid_until' => $booking->ends_at,
             ]);
-            // Le mode choisi par le joueur ne vaut que sur le terrain Arena ; jeu libre par défaut.
-            $booking->update(['hold_expires_at' => null, 'game_mode' => $booking->is_arena ? ($gameMode ?? 'jeu_libre') : null]);
+            $booking->update(['hold_expires_at' => null]);
             $this->transition($booking, 'confirmed', 'Paiement reçu.', $user->id);
 
             return $booking->fresh();

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Court;
 use App\Services\BookingService;
 use App\Services\Clock;
+use App\Services\SlotService;
 use Carbon\CarbonImmutable;
 use chillerlan\QRCode\QRCode;
 use Illuminate\Http\RedirectResponse;
@@ -52,7 +53,7 @@ class BookingController extends Controller
     public function pay(Request $request, Booking $booking): RedirectResponse
     {
         $this->ensureOwner($request, $booking);
-        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:'.implode(',', Booking::GAME_MODES)]]);
+        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:classic,'.implode(',', Booking::GAME_MODES)]]);
         try {
             $this->bookings->confirmPayment($booking, $request->user(), $data['game_mode'] ?? null);
         } catch (BookingException $e) {
@@ -120,6 +121,7 @@ class BookingController extends Controller
             'free_cancellation_until' => Clock::local($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS))->locale('fr')->isoFormat('dddd D MMMM [à] HH:mm'),
             'cancellable' => $b->status === 'confirmed' && $b->starts_at->isFuture(),
             'game_mode' => $b->game_mode,
+            'arcade_price_cents' => app(SlotService::class)->priceFor($b->starts_at, true)?->price_cents,
         ];
     }
 }

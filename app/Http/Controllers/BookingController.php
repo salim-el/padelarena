@@ -52,9 +52,9 @@ class BookingController extends Controller
     public function pay(Request $request, Booking $booking): RedirectResponse
     {
         $this->ensureOwner($request, $booking);
-        $request->validate(['accept_terms' => ['accepted']]);
+        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:'.implode(',', Booking::GAME_MODES)]]);
         try {
-            $this->bookings->confirmPayment($booking, $request->user());
+            $this->bookings->confirmPayment($booking, $request->user(), $data['game_mode'] ?? null);
         } catch (BookingException $e) {
             return to_route('planning')->withErrors(['booking' => $e->getMessage()]);
         }
@@ -115,8 +115,11 @@ class BookingController extends Controller
             'price_cents' => $b->price_cents,
             'vat_rate' => (float) $b->vat_rate,
             'hold_expires_at' => $b->hold_expires_at?->toIso8601String(),
+            // Faux à moins de 24 h du match : l'annulation n'est plus remboursée.
+            'refundable' => now()->lte($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS)),
             'free_cancellation_until' => Clock::local($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS))->locale('fr')->isoFormat('dddd D MMMM [à] HH:mm'),
             'cancellable' => $b->status === 'confirmed' && $b->starts_at->isFuture(),
+            'game_mode' => $b->game_mode,
         ];
     }
 }

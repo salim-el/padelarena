@@ -1,7 +1,7 @@
 import { BackButton } from '@/components/back-button';
 import { StatusBadge } from '@/components/status-badge';
 import AppLayout from '@/layouts/app-layout';
-import { euros, ucfirst } from '@/lib/money';
+import { euros, GAME_MODES, ucfirst } from '@/lib/money';
 import { Head, router, usePage } from '@inertiajs/react';
 import { CalendarDays, Clock, FileText } from 'lucide-react';
 
@@ -9,11 +9,13 @@ type Booking = {
     id: string;
     court: string;
     is_arena: boolean;
+    game_mode: string | null;
     date: string;
     time: string;
     status: string;
     price_cents: number;
     free_cancellation_until: string;
+    refundable: boolean;
     cancellable: boolean;
 };
 type Props = {
@@ -58,6 +60,11 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
                                 <StatusBadge status={booking.status} />
                             </div>
                             <h1 className="mt-1 text-3xl font-extrabold uppercase">{booking.court}</h1>
+                            {booking.game_mode && (
+                                <p className="mt-2 inline-flex rounded-full bg-[#C8E64A] px-3 py-1 text-xs font-bold text-[#0E1B2C] uppercase">
+                                    Mode {GAME_MODES[booking.game_mode]?.label ?? booking.game_mode}
+                                </p>
+                            )}
                             <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                 <span className="flex items-center gap-1.5">
                                     <CalendarDays className="size-4" aria-hidden /> {ucfirst(booking.date)}
@@ -108,7 +115,11 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
 
                 {booking.cancellable && (
                     <div className="bg-card flex flex-col gap-3 rounded-2xl border p-5">
-                        <p className="text-sm">Remboursement complet si vous annulez avant le {booking.free_cancellation_until}.</p>
+                        <p className="text-sm">
+                            {booking.refundable
+                                ? `Remboursement complet si vous annulez avant le ${booking.free_cancellation_until}.`
+                                : 'Le match commence dans moins de 24 h : une annulation ne sera pas remboursée.'}
+                        </p>
                         <button
                             type="button"
                             onClick={cancel}

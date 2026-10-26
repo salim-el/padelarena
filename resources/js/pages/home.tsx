@@ -173,8 +173,8 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode Arena</p>
                                     <h2 className="mt-2 text-3xl font-extrabold uppercase md:text-4xl">Votre match devient une partie</h2>
                                     <p className="mt-4 max-w-2xl text-[#F7F6F1]/80">
-                                        Des LED dans les cadres des vitres et un éclairage par zone transforment le terrain 4. Le gérant lance un
-                                        scénario, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
+                                        Des LED dans les cadres des vitres et un éclairage par zone transforment le terrain 4. Vous choisissez le mode
+                                        de jeu en réservant, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
                                     </p>
                                 </div>
                                 <Photo

@@ -42,6 +42,7 @@ class AdminController extends Controller
                 'time' => Clock::local($b->starts_at)->format('H:i').' – '.Clock::local($b->ends_at)->format('H:i'),
                 'player' => $b->organizer->name,
                 'status' => $b->status,
+                'game_mode' => $b->game_mode,
             ])->all(),
             'search' => $search,
             'users' => User::query()

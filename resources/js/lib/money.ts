@@ -11,3 +11,22 @@ export const STATUS_LABELS: Record<string, string> = {
     cancelled_unrefunded: 'Annulée sans remboursement',
     frozen: 'Gelée',
 };
+
+// Majuscule au premier mot seulement, comme le veut le français (« Dimanche 25 octobre »).
+export const ucfirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const MONTHS: Record<string, string> = {
+    janvier: 'janv.',
+    février: 'févr.',
+    mars: 'mars',
+    avril: 'avr.',
+    mai: 'mai',
+    juin: 'juin',
+    juillet: 'juil.',
+    août: 'août',
+    septembre: 'sept.',
+    octobre: 'oct.',
+    novembre: 'nov.',
+    décembre: 'déc.',
+};
+export const shortMonth = (m: string | undefined) => (m ? (MONTHS[m] ?? m) : '');

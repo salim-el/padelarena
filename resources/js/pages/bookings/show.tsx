@@ -1,12 +1,27 @@
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/app-layout';
 import { BackButton } from '@/components/back-button';
 import { StatusBadge } from '@/components/status-badge';
-import { euros } from '@/lib/money';
+import AppLayout from '@/layouts/app-layout';
+import { euros, ucfirst } from '@/lib/money';
 import { Head, router, usePage } from '@inertiajs/react';
+import { CalendarDays, Clock, FileText } from 'lucide-react';
 
-type Booking = { id: string; court: string; date: string; time: string; status: string; price_cents: number; free_cancellation_until: string; cancellable: boolean };
-type Props = { booking: Booking; qr: string | null; qr_window: string | null; invoices: { number: string; total_cents: number; vat_cents: number }[] };
+type Booking = {
+    id: string;
+    court: string;
+    is_arena: boolean;
+    date: string;
+    time: string;
+    status: string;
+    price_cents: number;
+    free_cancellation_until: string;
+    cancellable: boolean;
+};
+type Props = {
+    booking: Booking;
+    qr: string | null;
+    qr_window: string | null;
+    invoices: { number: string; total_cents: number; vat_cents: number }[];
+};
 
 export default function Show({ booking, qr, qr_window, invoices }: Props) {
     const { errors } = usePage<{ errors: Record<string, string> }>().props;
@@ -16,30 +31,91 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
     };
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Mes réservations', href: '/bookings' }, { title: booking.court, href: '#' }]}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Mes réservations', href: '/bookings' },
+                { title: booking.court, href: '#' },
+            ]}
+        >
             <Head title="Réservation" />
-            <div className="mx-auto flex w-full max-w-xl flex-col gap-4 p-4">
-                {errors.booking && <p role="alert" className="rounded-md border border-[#9E2833]/30 bg-[#FCE6E8] text-[#9E2833] p-3 text-sm">{errors.booking}</p>}
+            <div className="mx-auto flex w-full max-w-lg flex-col gap-5 p-4">
+                {errors.booking && (
+                    <p role="alert" className="rounded-lg border border-[#9E2833]/30 bg-[#FCE6E8] p-3 text-sm text-[#9E2833]">
+                        {errors.booking}
+                    </p>
+                )}
                 <BackButton href="/bookings">Mes réservations</BackButton>
-                <h1 className="text-2xl font-bold">{booking.court}</h1>
-                <p className="flex flex-wrap items-center gap-2">{booking.date} · {booking.time} <StatusBadge status={booking.status} /></p>
-                {qr && (
-                    <div className="rounded-xl border p-4">
-                        <h2 className="font-semibold">Votre QR code</h2>
-                        <p className="text-sm">Personnel, valable de {qr_window}, pour ce terrain uniquement.</p>
-                        <img src={qr} alt="QR code d’accès au terrain" className="mt-2 h-48 w-48" />
+
+                {/* Billet : en-tête marine, QR code au centre, facture en pied. */}
+                <article className="overflow-hidden rounded-2xl border bg-white text-[#0E1B2C] shadow-lg">
+                    <header className="relative overflow-hidden bg-[#0E1B2C] px-6 py-5 text-[#F7F6F1]">
+                        <img src="/images/arena-800.webp" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+                        <div className="relative">
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="font-mono text-xs tracking-widest text-[#C8E64A] uppercase">
+                                    {booking.is_arena ? 'Terrain Arena' : 'Terrain'}
+                                </p>
+                                <StatusBadge status={booking.status} />
+                            </div>
+                            <h1 className="mt-1 text-3xl font-extrabold uppercase">{booking.court}</h1>
+                            <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                <span className="flex items-center gap-1.5">
+                                    <CalendarDays className="size-4" aria-hidden /> {ucfirst(booking.date)}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <Clock className="size-4" aria-hidden /> {booking.time}
+                                </span>
+                            </p>
+                        </div>
+                    </header>
+
+                    {qr ? (
+                        <div className="flex flex-col items-center px-6 py-6 text-center">
+                            <img src={qr} alt="QR code d’accès au terrain" className="size-56 rounded-lg border p-2" />
+                            <p className="mt-3 text-sm font-semibold">Votre QR code personnel</p>
+                            <p className="text-sm text-[#5F6B78]">Valable de {qr_window}, pour ce terrain uniquement.</p>
+                        </div>
+                    ) : (
+                        <p className="px-6 py-6 text-center text-sm text-[#5F6B78]">Aucun QR code actif pour cette réservation.</p>
+                    )}
+
+                    {/* Découpe du billet. */}
+                    <div className="relative border-t-2 border-dashed border-[#DAD7CC]" aria-hidden>
+                        <span className="bg-background absolute -top-3 -left-3 size-6 rounded-full" />
+                        <span className="bg-background absolute -top-3 -right-3 size-6 rounded-full" />
                     </div>
-                )}
-                {invoices.length > 0 && (
-                    <div className="rounded-xl border p-4 text-sm">
-                        <h2 className="font-semibold">Facture</h2>
-                        {invoices.map((i) => <p key={i.number}>{i.number} · {euros(i.total_cents)} dont TVA {euros(i.vat_cents)}</p>)}
-                    </div>
-                )}
+
+                    <footer className="space-y-1 px-6 py-4 text-sm">
+                        {invoices.length > 0 ? (
+                            invoices.map((i) => (
+                                <p key={i.number} className="flex items-center justify-between gap-3">
+                                    <span className="flex items-center gap-2">
+                                        <FileText className="size-4 text-[#1D5C7A]" aria-hidden /> Facture {i.number}
+                                    </span>
+                                    <span>
+                                        <strong>{euros(i.total_cents)}</strong> <span className="text-[#5F6B78]">dont TVA {euros(i.vat_cents)}</span>
+                                    </span>
+                                </p>
+                            ))
+                        ) : (
+                            <p className="flex justify-between">
+                                <span>Prix</span>
+                                <strong>{euros(booking.price_cents)}</strong>
+                            </p>
+                        )}
+                    </footer>
+                </article>
+
                 {booking.cancellable && (
-                    <div className="flex flex-col gap-2">
+                    <div className="bg-card flex flex-col gap-3 rounded-2xl border p-5">
                         <p className="text-sm">Remboursement complet si vous annulez avant le {booking.free_cancellation_until}.</p>
-                        <Button variant="destructive" onClick={cancel}>Annuler la réservation</Button>
+                        <button
+                            type="button"
+                            onClick={cancel}
+                            className="rounded-lg border border-[#CC3342] px-4 py-2.5 text-sm font-semibold text-[#9E2833] transition hover:bg-[#FCE6E8] focus-visible:ring-2 focus-visible:ring-[#CC3342] focus-visible:outline-none"
+                        >
+                            Annuler la réservation
+                        </button>
                     </div>
                 )}
             </div>

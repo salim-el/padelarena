@@ -1,11 +1,22 @@
-import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/back-button';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { euros } from '@/lib/money';
+import { euros, ucfirst } from '@/lib/money';
 import { Head, useForm } from '@inertiajs/react';
+import { CalendarDays, Clock, ShieldCheck, Timer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type Booking = { id: string; court: string; date: string; time: string; price_cents: number; vat_rate: number; hold_expires_at: string | null; free_cancellation_until: string };
+type Booking = {
+    id: string;
+    court: string;
+    date: string;
+    time: string;
+    price_cents: number;
+    vat_rate: number;
+    hold_expires_at: string | null;
+    free_cancellation_until: string;
+};
 
 export default function Checkout({ booking }: { booking: Booking }) {
     const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean }>({ accept_terms: false });
@@ -18,26 +29,71 @@ export default function Checkout({ booking }: { booking: Booking }) {
         return () => clearInterval(t);
     }, [booking.hold_expires_at]);
 
+    const urgent = left < 120;
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Paiement', href: '#' }]}>
             <Head title="Paiement" />
-            <div className="mx-auto flex w-full max-w-xl flex-col gap-4 p-4">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 p-4">
                 <BackButton href="/planning">Planning</BackButton>
-                <h1 className="text-2xl font-bold">Paiement</h1>
-                <div className="rounded-xl border p-4">
-                    <p className="font-semibold">{booking.court} · {booking.date} · {booking.time}</p>
-                    <p>Prix TTC : <strong>{euros(booking.price_cents)}</strong> (TVA {booking.vat_rate} % comprise)</p>
-                    <p className="mt-2 text-sm">Annulation gratuite jusqu’au {booking.free_cancellation_until}.</p>
-                    <p className="mt-2 text-sm" aria-live="polite">Créneau bloqué pour vous encore {Math.floor(left / 60)} min {String(left % 60).padStart(2, '0')} s.</p>
-                </div>
-                <p className="rounded-md bg-[#E6ECF2] p-3 text-sm text-[#17304A]">Version alpha : le paiement est simulé. Aucune carte n’est débitée.</p>
-                <form onSubmit={(e) => { e.preventDefault(); post(`/bookings/${booking.id}/pay`); }} className="flex flex-col gap-3">
-                    <label className="flex items-start gap-2 text-sm">
-                        <input type="checkbox" checked={data.accept_terms} onChange={(e) => setData('accept_terms', e.target.checked)} />
+                <PageHeader eyebrow="Dernière étape" title="Paiement">
+                    <span
+                        aria-live="polite"
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-sm font-bold ${urgent ? 'bg-[#CC3342] text-white' : 'bg-[#C8E64A] text-[#0E1B2C]'}`}
+                    >
+                        <Timer className="size-4" aria-hidden />
+                        {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
+                        <span className="sr-only">avant la libération du créneau</span>
+                    </span>
+                </PageHeader>
+
+                <section className="bg-card rounded-2xl border p-6 shadow-sm">
+                    <h2 className="text-xl font-bold">{booking.court}</h2>
+                    <ul className="mt-3 space-y-2 text-sm">
+                        <li className="flex items-center gap-2">
+                            <CalendarDays className="size-4 text-[#1D5C7A]" aria-hidden /> {ucfirst(booking.date)}
+                        </li>
+                        <li className="flex items-center gap-2">
+                            <Clock className="size-4 text-[#1D5C7A]" aria-hidden /> {booking.time}
+                        </li>
+                        <li className="flex items-center gap-2">
+                            <ShieldCheck className="size-4 text-[#4E6600]" aria-hidden /> Annulation gratuite jusqu’au{' '}
+                            {booking.free_cancellation_until}
+                        </li>
+                    </ul>
+                    <div className="mt-5 flex items-end justify-between border-t border-dashed pt-4">
+                        <span className="text-sm text-[#5F6B78]">Total TTC, TVA {booking.vat_rate} % comprise</span>
+                        <span className="text-3xl font-extrabold">{euros(booking.price_cents)}</span>
+                    </div>
+                </section>
+
+                <p className="rounded-lg bg-[#E6ECF2] p-3 text-sm text-[#17304A]">
+                    Version alpha : le paiement est simulé. Aucune carte n’est débitée.
+                </p>
+
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        post(`/bookings/${booking.id}/pay`);
+                    }}
+                    className="flex flex-col gap-3"
+                >
+                    <label className="flex items-start gap-3 text-sm">
+                        <input
+                            type="checkbox"
+                            className="mt-0.5 size-4 accent-[#1D5C7A]"
+                            checked={data.accept_terms}
+                            onChange={(e) => setData('accept_terms', e.target.checked)}
+                        />
                         J’accepte les conditions générales et la règle d’annulation de 24 heures.
                     </label>
                     {errors.accept_terms && <p className="text-sm text-[#9E2833]">Vous devez accepter les conditions pour réserver.</p>}
-                    <Button type="submit" disabled={processing || left === 0}>Payer {euros(booking.price_cents)}</Button>
+                    <Button type="submit" size="lg" className="h-12 text-base font-bold" disabled={processing || left === 0}>
+                        Payer {euros(booking.price_cents)}
+                    </Button>
+                    {left === 0 && (
+                        <p className="text-sm text-[#9E2833]">Les dix minutes sont écoulées. Revenez au planning pour choisir un créneau.</p>
+                    )}
                 </form>
             </div>
         </AppLayout>

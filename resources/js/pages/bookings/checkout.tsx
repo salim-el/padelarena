@@ -2,24 +2,29 @@ import { BackButton } from '@/components/back-button';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import { euros, ucfirst } from '@/lib/money';
+import { euros, GAME_MODES, ucfirst } from '@/lib/money';
 import { Head, useForm } from '@inertiajs/react';
-import { CalendarDays, Clock, ShieldCheck, Timer } from 'lucide-react';
+import { CalendarDays, Clock, ShieldAlert, ShieldCheck, Timer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type Booking = {
     id: string;
     court: string;
+    is_arena: boolean;
     date: string;
     time: string;
     price_cents: number;
     vat_rate: number;
     hold_expires_at: string | null;
     free_cancellation_until: string;
+    refundable: boolean;
 };
 
 export default function Checkout({ booking }: { booking: Booking }) {
-    const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean }>({ accept_terms: false });
+    const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean; game_mode: string | null }>({
+        accept_terms: false,
+        game_mode: booking.is_arena ? 'chasse_aux_zones' : null,
+    });
     const [left, setLeft] = useState(0);
 
     useEffect(() => {
@@ -56,10 +61,16 @@ export default function Checkout({ booking }: { booking: Booking }) {
                         <li className="flex items-center gap-2">
                             <Clock className="size-4 text-[#1D5C7A]" aria-hidden /> {booking.time}
                         </li>
-                        <li className="flex items-center gap-2">
-                            <ShieldCheck className="size-4 text-[#4E6600]" aria-hidden /> Annulation gratuite jusqu’au{' '}
-                            {booking.free_cancellation_until}
-                        </li>
+                        {booking.refundable ? (
+                            <li className="flex items-center gap-2">
+                                <ShieldCheck className="size-4 text-[#4E6600]" aria-hidden /> Annulation gratuite jusqu’au{' '}
+                                {booking.free_cancellation_until}
+                            </li>
+                        ) : (
+                            <li className="flex items-center gap-2 font-semibold text-[#9E2833]">
+                                <ShieldAlert className="size-4" aria-hidden /> Match dans moins de 24 h : une annulation ne sera pas remboursée.
+                            </li>
+                        )}
                     </ul>
                     <div className="mt-5 flex items-end justify-between border-t border-dashed pt-4">
                         <span className="text-sm text-[#5F6B78]">Total TTC, TVA {booking.vat_rate} % comprise</span>
@@ -78,6 +89,35 @@ export default function Checkout({ booking }: { booking: Booking }) {
                     }}
                     className="flex flex-col gap-3"
                 >
+                    {booking.is_arena && (
+                        <fieldset className="flex flex-col gap-2">
+                            <legend className="mb-2 font-bold">Choisissez votre mode de jeu Arena</legend>
+                            <div className="grid gap-2 sm:grid-cols-3">
+                                {Object.entries(GAME_MODES).map(([value, mode]) => (
+                                    <label
+                                        key={value}
+                                        className={`cursor-pointer rounded-xl border-2 p-3 text-sm transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#1D5C7A] ${
+                                            data.game_mode === value
+                                                ? 'border-[#C8E64A] bg-[#0E1B2C] text-[#F7F6F1]'
+                                                : 'bg-card border-[#DAD7CC] hover:border-[#C8E64A]'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="game_mode"
+                                            value={value}
+                                            checked={data.game_mode === value}
+                                            onChange={() => setData('game_mode', value)}
+                                            className="sr-only"
+                                        />
+                                        <span className={`block font-bold ${data.game_mode === value ? 'text-[#C8E64A]' : ''}`}>{mode.label}</span>
+                                        <span className="mt-1 block text-xs opacity-80">{mode.text}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            {errors.game_mode && <p className="text-sm text-[#9E2833]">Choisissez un des trois modes de jeu.</p>}
+                        </fieldset>
+                    )}
                     <label className="flex items-start gap-3 text-sm">
                         <input
                             type="checkbox"

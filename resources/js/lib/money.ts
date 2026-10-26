@@ -30,3 +30,9 @@ const MONTHS: Record<string, string> = {
     décembre: 'déc.',
 };
 export const shortMonth = (m: string | undefined) => (m ? (MONTHS[m] ?? m) : '');
+
+export const GAME_MODES: Record<string, { label: string; text: string }> = {
+    chasse_aux_zones: { label: 'Chasse aux zones', text: 'Une zone verte s’allume : placez la balle dedans pour marquer des points bonus.' },
+    duel: { label: 'Duel', text: 'Deux équipes, deux couleurs. Chaque zone gagnée reste allumée à vos couleurs.' },
+    jeu_libre: { label: 'Jeu libre', text: 'Un match classique avec l’ambiance Arena : lumière, son et score affiché.' },
+};

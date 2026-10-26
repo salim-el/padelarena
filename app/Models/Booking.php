@@ -10,7 +10,7 @@ class Booking extends Model
 {
     public const ACTIVE = ['pending_payment', 'confirmed', 'used', 'frozen'];
 
-    public const GAME_MODES = ['chasse_aux_zones', 'duel', 'jeu_libre'];
+    public const GAME_MODES = ['zone_hunt', 'duel', 'free'];
 
     protected $fillable = ['public_id', 'court_id', 'organizer_id', 'pricing_rule_id', 'starts_at', 'ends_at', 'status', 'price_cents', 'vat_rate', 'is_arena', 'hold_expires_at', 'cancelled_at', 'game_mode'];
 

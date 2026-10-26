@@ -55,7 +55,7 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
                         <div className="relative">
                             <div className="flex items-center justify-between gap-3">
                                 <p className="font-mono text-xs tracking-widest text-[#C8E64A] uppercase">
-                                    {booking.is_arena ? 'Terrain Arena' : 'Terrain'}
+                                    {booking.is_arena ? 'Partie arcade' : 'Partie classique'}
                                 </p>
                                 <StatusBadge status={booking.status} />
                             </div>

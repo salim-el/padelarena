@@ -63,7 +63,7 @@ export default function Home({ prices }: { prices: Price[] }) {
             <Head title="Padel indoor à Anderlecht">
                 <meta
                     name="description"
-                    content="Six terrains de padel couverts à Anderlecht, dont un terrain Arena aux zones lumineuses. Réservation en ligne, paiement sécurisé, accès par QR code."
+                    content="Six terrains de padel couverts à Anderlecht, tous jouables en mode arcade avec zones lumineuses. Réservation en ligne, paiement sécurisé, accès par QR code."
                 />
             </Head>
             <div className="min-h-screen bg-[#F7F6F1] text-[#0E1B2C]">
@@ -85,7 +85,7 @@ export default function Home({ prices }: { prices: Price[] }) {
                         <ul className="hidden items-center gap-6 text-sm font-semibold md:flex">
                             <li>
                                 <a href="#arena" className="hover:text-[#C8E64A]">
-                                    Mode Arena
+                                    Mode arcade
                                 </a>
                             </li>
                             <li>
@@ -110,9 +110,17 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     Mon espace
                                 </Link>
                             ) : (
-                                <Link href="/login" className="text-sm font-semibold hover:text-[#C8E64A]">
-                                    Connexion
-                                </Link>
+                                <>
+                                    <Link href="/login" className="text-sm font-semibold hover:text-[#C8E64A]">
+                                        Connexion
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        className="rounded-lg border border-[#F7F6F1]/40 px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
+                                    >
+                                        Inscription
+                                    </Link>
+                                </>
                             )}
                             <Link href="/planning" className={`${CTA} px-4 py-2 text-sm`}>
                                 Réserver
@@ -127,22 +135,22 @@ export default function Home({ prices }: { prices: Price[] }) {
                         <div className="absolute inset-0 bg-gradient-to-r from-[#0E1B2C] via-[#0E1B2C]/85 to-[#0E1B2C]/20" aria-hidden />
                         <div className="relative mx-auto max-w-6xl px-4 pt-20 pb-32 md:pt-28 md:pb-40">
                             <div className="max-w-2xl">
-                                <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Nouveau · Terrain 4</p>
+                                <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Nouveau · Sur les 6 terrains</p>
                                 <h1 className="mt-3 text-4xl leading-tight font-extrabold uppercase md:text-6xl">
                                     Le padel,
                                     <br />
                                     <span className="text-[#C8E64A]">version arcade.</span>
                                 </h1>
                                 <p className="mt-5 max-w-xl text-lg text-[#F7F6F1]/85">
-                                    Six terrains couverts à Anderlecht. Sur le terrain Arena, les vitres s’allument, les zones donnent des points et
-                                    le score s’affiche en direct.
+                                    Six terrains couverts à Anderlecht. En mode arcade, les vitres s’allument, les zones donnent des points et le
+                                    score s’affiche en direct.
                                 </p>
                                 <div className="mt-8 flex flex-wrap gap-3">
                                     <Link href="/planning" className={CTA}>
                                         Réserver un terrain
                                     </Link>
                                     <a href="#arena" className={GHOST}>
-                                        Découvrir le mode Arena
+                                        Découvrir le mode arcade
                                     </a>
                                 </div>
                             </div>
@@ -153,7 +161,7 @@ export default function Home({ prices }: { prices: Price[] }) {
                         <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-6 shadow-lg md:grid-cols-4">
                             {[
                                 ['6', 'terrains couverts'],
-                                ['1', 'terrain Arena'],
+                                ['4', 'modes de jeu'],
                                 ['9 h – 22 h 30', 'tous les jours'],
                                 [euros(from), 'le créneau de 90 min, dès'],
                             ].map(([value, label]) => (
@@ -170,17 +178,17 @@ export default function Home({ prices }: { prices: Price[] }) {
                         <div className="mx-auto max-w-6xl px-4">
                             <div className="grid items-center gap-10 md:grid-cols-2">
                                 <div>
-                                    <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode Arena</p>
+                                    <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode arcade</p>
                                     <h2 className="mt-2 text-3xl font-extrabold uppercase md:text-4xl">Votre match devient une partie</h2>
                                     <p className="mt-4 max-w-2xl text-[#F7F6F1]/80">
-                                        Des LED dans les cadres des vitres et un éclairage par zone transforment le terrain 4. Vous choisissez le mode
-                                        de jeu en réservant, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
+                                        Des LED dans les cadres des vitres et un éclairage par zone équipent chacun des six terrains. Vous choisissez
+                                        le mode de jeu en réservant, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
                                     </p>
                                 </div>
                                 <Photo
                                     name="arena"
                                     sizes="(min-width: 768px) 50vw, 100vw"
-                                    alt="Balle qui rebondit dans une zone lumineuse verte, sur le terrain Arena éclairé par des LED"
+                                    alt="Balle qui rebondit dans une zone lumineuse verte, sur un terrain en mode arcade éclairé par des LED"
                                     className="aspect-video w-full rounded-2xl object-cover shadow-[0_0_40px_rgba(200,230,74,0.25)]"
                                 />
                             </div>
@@ -199,7 +207,7 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     {
                                         icon: Trophy,
                                         title: 'Jeu libre',
-                                        text: 'Un match classique avec l’ambiance Arena : lumière, son et score affiché sur l’écran du terrain.',
+                                        text: 'Un match classique avec l’ambiance arcade : lumière, son et score affiché sur l’écran du terrain.',
                                     },
                                 ].map(({ icon: Icon, title, text }) => (
                                     <li key={title} className="rounded-xl border border-[#C8E64A]/30 bg-[#17304A] p-6">
@@ -219,7 +227,7 @@ export default function Home({ prices }: { prices: Price[] }) {
                                 </span>
                             </p>
                             <Link href="/planning" className={`${CTA} mt-8`}>
-                                Réserver le terrain Arena
+                                Réserver en mode arcade
                             </Link>
                         </div>
                     </section>
@@ -253,8 +261,8 @@ export default function Home({ prices }: { prices: Price[] }) {
                             </p>
                             <div className="mt-8 grid gap-4 md:grid-cols-2">
                                 {[
-                                    { title: 'Terrains classiques', rows: classic, highlight: false },
-                                    { title: 'Terrain Arena', rows: arena, highlight: true },
+                                    { title: 'Mode classique', rows: classic, highlight: false },
+                                    { title: 'Mode arcade (+14 €)', rows: arena, highlight: true },
                                 ].map(({ title, rows, highlight }) => (
                                     <div
                                         key={title}

@@ -9,12 +9,13 @@ use Carbon\CarbonImmutable;
 
 class SlotService
 {
-    public function priceFor(Court $court, CarbonImmutable $startUtc): ?PricingRule
+    /** Règle de prix d'un créneau : classique, ou arcade avec son supplément. */
+    public function priceFor(CarbonImmutable $startUtc, bool $arcade = false): ?PricingRule
     {
         $local = Clock::local($startUtc);
 
         return PricingRule::query()
-            ->where('is_arena', $court->is_arena)
+            ->where('is_arena', $arcade)
             ->where('start_time', '<=', $local->format('H:i:s'))
             ->where('end_time', '>', $local->format('H:i:s'))
             ->whereDate('valid_from', '<=', $local->toDateString())
@@ -42,7 +43,7 @@ class SlotService
             $cells = [];
             foreach ($courts as $court) {
                 $taken = $busy->contains(fn ($b) => $b->court_id === $court->id && $b->starts_at < $end && $b->ends_at > $start);
-                $rule = $this->priceFor($court, $start);
+                $rule = $this->priceFor($start);
                 $cells[] = [
                     'court_id' => $court->id,
                     'available' => ! $taken && $rule !== null && $start->isFuture(),

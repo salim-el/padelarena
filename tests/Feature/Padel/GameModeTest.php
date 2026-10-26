@@ -28,38 +28,55 @@ class GameModeTest extends TestCase
         $this->lucas = User::where('email', 'lucas.martin@example.test')->first();
     }
 
-    private function hold(string $court): Booking
+    private function hold(string $court, string $time = '19:30'): Booking
     {
-        return app(BookingService::class)->hold($this->lucas, Court::where('name', $court)->first(), Clock::slotStart('2026-10-23', '19:30'));
+        return app(BookingService::class)->hold($this->lucas, Court::where('name', $court)->first(), Clock::slotStart('2026-10-23', $time));
     }
 
-    public function test_the_player_chooses_the_arena_game_mode_when_paying(): void
+    private function pay(Booking $booking, array $data = [])
     {
-        $booking = $this->hold('Terrain 4');
-        $this->actingAs($this->lucas)->post("/bookings/{$booking->public_id}/pay", ['accept_terms' => '1', 'game_mode' => 'duel'])->assertRedirect();
-        $this->assertSame('duel', $booking->refresh()->game_mode);
+        return $this->actingAs($this->lucas)->post("/bookings/{$booking->public_id}/pay", ['accept_terms' => '1'] + $data);
     }
 
-    public function test_arena_defaults_to_free_play_and_classic_courts_have_no_mode(): void
+    public function test_every_court_can_be_played_in_arcade_mode_for_14_euros_more(): void
     {
-        $arena = $this->hold('Terrain 4');
-        $this->actingAs($this->lucas)->post("/bookings/{$arena->public_id}/pay", ['accept_terms' => '1']);
-        $this->assertSame('jeu_libre', $arena->refresh()->game_mode);
+        foreach (['Terrain 1', 'Terrain 6'] as $court) {
+            $booking = $this->hold($court);
+            $this->assertSame(4800, $booking->price_cents);
+            $this->pay($booking, ['game_mode' => 'duel'])->assertRedirect();
+            $booking->refresh();
+            $this->assertSame('duel', $booking->game_mode);
+            $this->assertTrue($booking->is_arena);
+            $this->assertSame(6200, $booking->price_cents);
+            $this->assertSame(6200, DB::table('invoices')->where('booking_id', $booking->id)->value('total_cents'));
+        }
+    }
 
-        $classic = $this->hold('Terrain 1');
-        $this->actingAs($this->lucas)->post("/bookings/{$classic->public_id}/pay", ['accept_terms' => '1', 'game_mode' => 'duel']);
-        $this->assertNull($classic->refresh()->game_mode);
-        $this->assertSame('confirmed', $classic->status);
+    public function test_off_peak_arcade_also_costs_14_euros_more(): void
+    {
+        $booking = $this->hold('Terrain 2', '10:30');
+        $this->pay($booking, ['game_mode' => 'zone_hunt']);
+        $this->assertSame(3360 + 1400, $booking->refresh()->price_cents);
+    }
+
+    public function test_classic_is_the_default_and_keeps_the_normal_price(): void
+    {
+        $booking = $this->hold('Terrain 3');
+        $this->pay($booking);
+        $booking->refresh();
+        $this->assertFalse($booking->is_arena);
+        $this->assertNull($booking->game_mode);
+        $this->assertSame(4800, DB::table('invoices')->where('booking_id', $booking->id)->value('total_cents'));
     }
 
     public function test_an_unknown_game_mode_is_refused(): void
     {
         $booking = $this->hold('Terrain 4');
-        $this->actingAs($this->lucas)->post("/bookings/{$booking->public_id}/pay", ['accept_terms' => '1', 'game_mode' => 'triche'])->assertSessionHasErrors('game_mode');
+        $this->pay($booking, ['game_mode' => 'triche'])->assertSessionHasErrors('game_mode');
         $this->assertSame('pending_payment', $booking->refresh()->status);
     }
 
-    public function test_the_database_refuses_a_game_mode_on_a_classic_court(): void
+    public function test_the_database_keeps_mode_and_arcade_flag_consistent(): void
     {
         $booking = $this->hold('Terrain 1');
         $this->expectException(QueryException::class);

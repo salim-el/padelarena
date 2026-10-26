@@ -72,7 +72,7 @@ export default function Dashboard({ stats, today, users, search }: { stats: Stat
                                         <th className="p-2">Heure</th>
                                         <th className="p-2">Terrain</th>
                                         <th className="p-2">Joueur</th>
-                                        <th className="p-2">Mode Arena</th>
+                                        <th className="p-2">Mode de jeu</th>
                                         <th className="p-2">État</th>
                                     </tr>
                                 </thead>
@@ -82,7 +82,7 @@ export default function Dashboard({ stats, today, users, search }: { stats: Stat
                                             <td className="p-2 whitespace-nowrap">{b.time}</td>
                                             <td className="p-2">{b.court}</td>
                                             <td className="p-2">{b.player}</td>
-                                            <td className="p-2">{b.game_mode ? GAME_MODES[b.game_mode]?.label : '—'}</td>
+                                            <td className="p-2">{GAME_MODES[b.game_mode ?? 'classic']?.label}</td>
                                             <td className="p-2">
                                                 <StatusBadge status={b.status} />
                                             </td>

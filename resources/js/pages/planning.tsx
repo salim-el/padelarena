@@ -77,15 +77,17 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                 <section className="bg-card overflow-hidden rounded-2xl border shadow-sm">
                     <h2 className="border-b px-4 py-3 font-semibold">{ucfirst(label)}</h2>
                     <div className="overflow-x-auto">
-                        <table className="w-full border-separate border-spacing-1.5 text-sm">
+                        <table className="w-full min-w-[760px] table-fixed border-separate border-spacing-1.5 text-sm">
                             <thead>
                                 <tr>
-                                    <th className="px-2 py-1 text-left text-xs font-semibold tracking-wide text-[#5F6B78] uppercase">Créneau</th>
+                                    <th className="w-20 px-2 py-1 text-left align-bottom text-xs font-semibold tracking-wide text-[#5F6B78] uppercase">
+                                        Créneau
+                                    </th>
                                     {courts.map((c) => (
-                                        <th key={c.id} className="min-w-28 px-2 py-1 text-left">
+                                        <th key={c.id} className="px-2 py-1 text-left align-bottom">
                                             <span className="font-bold">{c.name}</span>
                                             {c.is_arena && (
-                                                <span className="ml-2 rounded-full bg-[#C8E64A] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#0E1B2C] uppercase">
+                                                <span className="mt-1 block w-fit rounded-full bg-[#C8E64A] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#0E1B2C] uppercase">
                                                     Arena
                                                 </span>
                                             )}
@@ -106,7 +108,7 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                                     <button
                                                         type="button"
                                                         onClick={() => book(cell, row)}
-                                                        className={`w-full rounded-lg border px-2 py-2.5 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(courts[i], cell)}`}
+                                                        className={`flex h-14 w-full flex-col items-center justify-center rounded-lg border px-2 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(courts[i], cell)}`}
                                                     >
                                                         {euros(cell.price_cents)}
                                                         {cell.off_peak && (
@@ -114,7 +116,7 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                                         )}
                                                     </button>
                                                 ) : (
-                                                    <span className="block rounded-lg border border-dashed border-[#DAD7CC] px-2 py-2.5 text-center text-xs text-[#6B7480]">
+                                                    <span className="flex h-14 items-center justify-center rounded-lg border border-dashed border-[#DAD7CC] px-2 text-center text-xs text-[#6B7480]">
                                                         {cell.past ? 'Passé' : 'Complet'}
                                                     </span>
                                                 )}

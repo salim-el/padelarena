@@ -18,14 +18,17 @@ type Booking = {
     hold_expires_at: string | null;
     free_cancellation_until: string;
     refundable: boolean;
+    arcade_price_cents: number | null;
 };
 
 export default function Checkout({ booking }: { booking: Booking }) {
     const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean; game_mode: string | null }>({
         accept_terms: false,
-        game_mode: booking.is_arena ? 'chasse_aux_zones' : null,
+        game_mode: 'classic',
     });
     const [left, setLeft] = useState(0);
+    const arcade = data.game_mode !== 'classic' && booking.arcade_price_cents !== null;
+    const total = arcade ? (booking.arcade_price_cents as number) : booking.price_cents;
 
     useEffect(() => {
         const tick = () => setLeft(Math.max(0, Math.floor((new Date(booking.hold_expires_at ?? 0).getTime() - Date.now()) / 1000)));
@@ -74,7 +77,7 @@ export default function Checkout({ booking }: { booking: Booking }) {
                     </ul>
                     <div className="mt-5 flex items-end justify-between border-t border-dashed pt-4">
                         <span className="text-sm text-[#5F6B78]">Total TTC, TVA {booking.vat_rate} % comprise</span>
-                        <span className="text-3xl font-extrabold">{euros(booking.price_cents)}</span>
+                        <span className="text-3xl font-extrabold">{euros(total)}</span>
                     </div>
                 </section>
 
@@ -89,10 +92,10 @@ export default function Checkout({ booking }: { booking: Booking }) {
                     }}
                     className="flex flex-col gap-3"
                 >
-                    {booking.is_arena && (
+                    {booking.arcade_price_cents !== null && (
                         <fieldset className="flex flex-col gap-2">
-                            <legend className="mb-2 font-bold">Choisissez votre mode de jeu Arena</legend>
-                            <div className="grid gap-2 sm:grid-cols-3">
+                            <legend className="mb-2 font-bold">Choisissez votre mode de jeu</legend>
+                            <div className="grid gap-2 sm:grid-cols-2">
                                 {Object.entries(GAME_MODES).map(([value, mode]) => (
                                     <label
                                         key={value}
@@ -110,12 +113,15 @@ export default function Checkout({ booking }: { booking: Booking }) {
                                             onChange={() => setData('game_mode', value)}
                                             className="sr-only"
                                         />
-                                        <span className={`block font-bold ${data.game_mode === value ? 'text-[#C8E64A]' : ''}`}>{mode.label}</span>
+                                        <span className={`flex justify-between gap-2 font-bold ${data.game_mode === value ? 'text-[#C8E64A]' : ''}`}>
+                                            {mode.label}
+                                            <span className="text-xs">{value === 'classic' ? 'inclus' : '+14 €'}</span>
+                                        </span>
                                         <span className="mt-1 block text-xs opacity-80">{mode.text}</span>
                                     </label>
                                 ))}
                             </div>
-                            {errors.game_mode && <p className="text-sm text-[#9E2833]">Choisissez un des trois modes de jeu.</p>}
+                            {errors.game_mode && <p className="text-sm text-[#9E2833]">Choisissez un des modes de jeu proposés.</p>}
                         </fieldset>
                     )}
                     <label className="flex items-start gap-3 text-sm">
@@ -129,7 +135,7 @@ export default function Checkout({ booking }: { booking: Booking }) {
                     </label>
                     {errors.accept_terms && <p className="text-sm text-[#9E2833]">Vous devez accepter les conditions pour réserver.</p>}
                     <Button type="submit" size="lg" className="h-12 text-base font-bold" disabled={processing || left === 0}>
-                        Payer {euros(booking.price_cents)}
+                        Payer {euros(total)}
                     </Button>
                     {left === 0 && (
                         <p className="text-sm text-[#9E2833]">Les dix minutes sont écoulées. Revenez au planning pour choisir un créneau.</p>

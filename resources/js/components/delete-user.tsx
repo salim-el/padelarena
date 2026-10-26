@@ -3,8 +3,8 @@ import { FormEventHandler, useRef } from 'react';
 
 // Components...
 import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/password-input';
+import { Button } from '@/components/ui/button';
 
 import { Label } from '@/components/ui/label';
 
@@ -48,8 +48,8 @@ export default function DeleteUser() {
                     <DialogContent>
                         <DialogTitle>Voulez-vous vraiment supprimer votre compte ?</DialogTitle>
                         <DialogDescription>
-                            Vos données personnelles seront effacées. Les factures déjà émises restent conservées 7 ans, comme la loi l’impose.
-                            Entrez votre mot de passe pour confirmer.
+                            Vos données personnelles seront effacées. Les factures déjà émises restent conservées 7 ans, comme la loi l’impose. Entrez
+                            votre mot de passe pour confirmer.
                         </DialogDescription>
                         <form className="space-y-6" onSubmit={deleteUser}>
                             <div className="grid gap-2">

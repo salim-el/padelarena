@@ -5,7 +5,7 @@ import { UserMenuContent } from '@/components/user-menu-content';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { ChevronsUpDown, LogIn } from 'lucide-react';
+import { ChevronsUpDown, LogIn, UserPlus } from 'lucide-react';
 
 export function NavUser() {
     const { auth } = usePage<SharedData>().props;
@@ -21,6 +21,14 @@ export function NavUser() {
                         <Link href="/login">
                             <LogIn />
                             <span>Se connecter</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                        <Link href="/register">
+                            <UserPlus />
+                            <span>Créer un compte</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

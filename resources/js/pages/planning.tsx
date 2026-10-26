@@ -30,8 +30,7 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
         router.post('/bookings', { court_id: cell.court_id, starts_at: row.starts_at });
     };
 
-    const slotClass = (court: Court, cell: Cell) => {
-        if (court.is_arena) return 'border-[#C8E64A]/60 bg-[#0E1B2C] text-[#C8E64A] hover:bg-[#17304A]';
+    const slotClass = (cell: Cell) => {
         if (cell.off_peak) return 'border-[#1D5C7A]/25 bg-[#E3F0F7] text-[#1D5C7A] hover:bg-[#cfe6f2]';
         return 'border-[#DAD7CC] bg-white text-[#0E1B2C] hover:border-[#C8E64A] hover:bg-[#EEF4D6]';
     };
@@ -86,11 +85,6 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                     {courts.map((c) => (
                                         <th key={c.id} className="px-2 py-1 text-left align-bottom">
                                             <span className="font-bold">{c.name}</span>
-                                            {c.is_arena && (
-                                                <span className="mt-1 block w-fit rounded-full bg-[#C8E64A] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[#0E1B2C] uppercase">
-                                                    Arena
-                                                </span>
-                                            )}
                                         </th>
                                     ))}
                                 </tr>
@@ -102,13 +96,13 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                             {row.time}
                                             <span className="block text-[#5F6B78]">{row.end}</span>
                                         </td>
-                                        {row.cells.map((cell, i) => (
+                                        {row.cells.map((cell) => (
                                             <td key={cell.court_id}>
                                                 {cell.available ? (
                                                     <button
                                                         type="button"
                                                         onClick={() => book(cell, row)}
-                                                        className={`flex h-14 w-full flex-col items-center justify-center rounded-lg border px-2 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(courts[i], cell)}`}
+                                                        className={`flex h-14 w-full flex-col items-center justify-center rounded-lg border px-2 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(cell)}`}
                                                     >
                                                         {euros(cell.price_cents)}
                                                         {cell.off_peak && (
@@ -137,7 +131,8 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                         <span className="size-3 rounded-sm bg-[#E3F0F7]" aria-hidden /> Heure creuse
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Terrain Arena
+                        <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Mode arcade sur tous les terrains : +14
+                        € au paiement
                     </span>
                     <span>Prix TTC par créneau de 90 minutes, TVA de 6 % comprise. Annulation remboursée jusqu’à 24 h avant.</span>
                 </div>

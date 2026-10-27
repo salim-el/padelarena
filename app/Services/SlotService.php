@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Court;
+use App\Models\CourtClosure;
 use App\Models\PricingRule;
 use Carbon\CarbonImmutable;
 
@@ -62,13 +63,16 @@ class SlotService
             ->where(fn ($q) => $q->where('status', '!=', 'pending_payment')->orWhere('hold_expires_at', '>', now()))
             ->get(['court_id', 'starts_at', 'ends_at']);
 
+        $closures = CourtClosure::where('starts_at', '<', $dayStart->addDay())->where('ends_at', '>', $dayStart)->get(['court_id', 'starts_at', 'ends_at']);
+
         $rows = [];
         foreach (Clock::SLOTS as $time) {
             $start = Clock::slotStart($date, $time);
             $end = $start->addMinutes(Clock::SLOT_MINUTES);
             $cells = [];
             foreach ($courts as $court) {
-                $taken = $busy->contains(fn ($b) => $b->court_id === $court->id && $b->starts_at < $end && $b->ends_at > $start);
+                $closed = $closures->contains(fn ($c) => $c->court_id === $court->id && $c->starts_at < $end && $c->ends_at > $start);
+                $taken = $closed || $busy->contains(fn ($b) => $b->court_id === $court->id && $b->starts_at < $end && $b->ends_at > $start);
                 $rule = $this->priceFor($start);
                 $cells[] = [
                     'court_id' => $court->id,
@@ -76,6 +80,7 @@ class SlotService
                     'price_cents' => $rule ? $this->priceCents($rule, $start) : null,
                     'flash' => $rule !== null && ! $taken && $this->isFlash($start),
                     'past' => ! $start->isFuture(),
+                    'closed' => $closed,
                     'off_peak' => $rule !== null && str_contains(strtolower($rule->name), 'creuses'),
                 ];
             }
@@ -83,6 +88,7 @@ class SlotService
         }
 
         return [
+            'arcade_supplement_cents' => $this->arcadeSupplement(Clock::slotStart($date, Clock::SLOTS[count(Clock::SLOTS) - 1])),
             'courts' => $courts->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'is_arena' => $c->is_arena])->all(),
             'rows' => $rows,
         ];

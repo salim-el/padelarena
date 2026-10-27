@@ -5,15 +5,15 @@ import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-type Cell = { court_id: number; available: boolean; price_cents: number | null; past: boolean; off_peak: boolean; flash: boolean };
+type Cell = { court_id: number; available: boolean; price_cents: number | null; past: boolean; off_peak: boolean; flash: boolean; closed: boolean };
 type Row = { time: string; end: string; starts_at: string; cells: Cell[] };
 type Court = { id: number; name: string; is_arena: boolean };
-type Props = { date: string; today: string; max: string; courts: Court[]; rows: Row[] };
+type Props = { date: string; today: string; max: string; courts: Court[]; rows: Row[]; arcade_supplement_cents: number | null };
 
 const NAV =
     'inline-flex size-9 items-center justify-center rounded-lg border border-[#F7F6F1]/30 text-[#F7F6F1] transition hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent';
 
-export default function Planning({ date, today, max, courts, rows }: Props) {
+export default function Planning({ date, today, max, courts, rows, arcade_supplement_cents }: Props) {
     const { auth, errors } = usePage<SharedData & { errors: Record<string, string> }>().props;
     const label = new Date(`${date}T12:00:00`).toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -116,7 +116,7 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                                     </button>
                                                 ) : (
                                                     <span className="flex h-14 items-center justify-center rounded-lg border border-dashed border-[#DAD7CC] px-2 text-center text-xs text-[#6B7480]">
-                                                        {cell.past ? 'Passé' : 'Complet'}
+                                                        {cell.past ? 'Passé' : cell.closed ? 'Fermé' : 'Complet'}
                                                     </span>
                                                 )}
                                             </td>
@@ -139,8 +139,8 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                         <span className="size-3 rounded-sm bg-[#FCE6E8] ring-1 ring-[#CC3342]/40" aria-hidden /> Flash : −20 % à moins de 3 h du début
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Mode arcade sur tous les terrains : +14
-                        € au paiement
+                        <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Mode arcade sur tous les terrains : +
+                        {euros(arcade_supplement_cents)} au paiement
                     </span>
                     <span>Prix TTC par créneau de 90 minutes, TVA de 6 % comprise. Annulation remboursée jusqu’à 24 h avant.</span>
                 </div>

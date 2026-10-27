@@ -3,7 +3,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { euros, GAME_MODES } from '@/lib/money';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { CalendarCheck, Gauge, TrendingUp, Wallet } from 'lucide-react';
 import { useState } from 'react';
 
@@ -34,7 +34,60 @@ function Stat({ label, value, icon: Icon }: { label: string; value: string; icon
     );
 }
 
-export default function Dashboard({ stats, today, users, search }: { stats: Stats; today: Row[]; users: Page<Account>; search: string }) {
+type Rule = { id: number; name: string; start: string; end: string; price_cents: number; is_arena: boolean };
+type Closure = { id: number; court: string; reason: string; from: string; to: string };
+
+function PriceRow({ rule }: { rule: Rule }) {
+    const [value, setValue] = useState((rule.price_cents / 100).toFixed(2));
+    const save = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.patch(
+            `/admin/pricing-rules/${rule.id}`,
+            { price_cents: Math.round(parseFloat(value.replace(',', '.')) * 100) },
+            { preserveScroll: true },
+        );
+    };
+    return (
+        <form onSubmit={save} className="flex flex-wrap items-center justify-between gap-2 border-b py-2 last:border-0">
+            <label htmlFor={`rule-${rule.id}`} className="text-sm">
+                <span className="font-semibold">{rule.name}</span> · {rule.start} – {rule.end}
+            </label>
+            <span className="flex items-center gap-2">
+                <input
+                    id={`rule-${rule.id}`}
+                    inputMode="decimal"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    className="bg-card w-24 rounded-md border px-2 py-1 text-right"
+                />
+                <span className="text-sm">€</span>
+                <Button type="submit" variant="outline" size="sm">
+                    Enregistrer
+                </Button>
+            </span>
+        </form>
+    );
+}
+
+export default function Dashboard({
+    stats,
+    today,
+    users,
+    search,
+    courts,
+    rules,
+    closures,
+}: {
+    stats: Stats;
+    today: Row[];
+    users: Page<Account>;
+    search: string;
+    courts: { id: number; name: string }[];
+    rules: Rule[];
+    closures: Closure[];
+}) {
+    const { errors } = usePage<{ errors: Record<string, string> }>().props;
+    const closure = useForm({ court_id: courts[0]?.id ?? 0, from: '', to: '', reason: '' });
     const [q, setQ] = useState(search);
     const find = (e: React.FormEvent) => {
         e.preventDefault();
@@ -201,6 +254,103 @@ export default function Dashboard({ stats, today, users, search }: { stats: Stat
                             )}
                         </nav>
                     )}
+                </section>
+
+                <section className="grid gap-4 lg:grid-cols-2">
+                    <div className="bg-card rounded-2xl border p-5">
+                        <h2 className="text-lg font-semibold">Tarifs</h2>
+                        <p className="text-muted-foreground mb-2 text-sm">Prix TTC par créneau. Les réservations déjà payées gardent leur prix.</p>
+                        {rules.map((r) => (
+                            <PriceRow key={r.id} rule={r} />
+                        ))}
+                        {errors.price_cents && (
+                            <p role="alert" className="mt-2 text-sm text-[#9E2833]">
+                                {errors.price_cents}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="bg-card rounded-2xl border p-5">
+                        <h2 className="text-lg font-semibold">Fermer un terrain</h2>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                closure.post('/admin/closures', { preserveScroll: true, onSuccess: () => closure.reset('from', 'to', 'reason') });
+                            }}
+                            className="mt-2 grid gap-2 sm:grid-cols-2"
+                        >
+                            <label className="text-sm">
+                                Terrain
+                                <select
+                                    value={closure.data.court_id}
+                                    onChange={(e) => closure.setData('court_id', Number(e.target.value))}
+                                    className="bg-card mt-1 block w-full rounded-md border px-2 py-1.5"
+                                >
+                                    {courts.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="text-sm">
+                                Motif
+                                <input
+                                    value={closure.data.reason}
+                                    onChange={(e) => closure.setData('reason', e.target.value)}
+                                    placeholder="Vitre à remplacer"
+                                    className="bg-card mt-1 block w-full rounded-md border px-2 py-1.5"
+                                />
+                            </label>
+                            <label className="text-sm">
+                                Du
+                                <input
+                                    type="datetime-local"
+                                    value={closure.data.from}
+                                    onChange={(e) => closure.setData('from', e.target.value)}
+                                    className="bg-card mt-1 block w-full rounded-md border px-2 py-1.5"
+                                />
+                            </label>
+                            <label className="text-sm">
+                                Au
+                                <input
+                                    type="datetime-local"
+                                    value={closure.data.to}
+                                    onChange={(e) => closure.setData('to', e.target.value)}
+                                    className="bg-card mt-1 block w-full rounded-md border px-2 py-1.5"
+                                />
+                            </label>
+                            {(errors.closure || Object.keys(closure.errors).length > 0) && (
+                                <p role="alert" className="text-sm text-[#9E2833] sm:col-span-2">
+                                    {errors.closure ?? 'Vérifiez le terrain, les dates et le motif.'}
+                                </p>
+                            )}
+                            <Button type="submit" disabled={closure.processing} className="sm:col-span-2">
+                                Fermer ce terrain
+                            </Button>
+                        </form>
+                        {closures.length > 0 && (
+                            <ul className="mt-4 space-y-2 text-sm">
+                                {closures.map((c) => (
+                                    <li
+                                        key={c.id}
+                                        className="flex items-center justify-between gap-2 rounded-lg bg-[#FCE6E8] px-3 py-2 text-[#9E2833]"
+                                    >
+                                        <span>
+                                            <strong>{c.court}</strong> · {c.from} → {c.to} · {c.reason}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => router.delete(`/admin/closures/${c.id}`, { preserveScroll: true })}
+                                            className="font-semibold underline"
+                                        >
+                                            Rouvrir
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                 </section>
             </div>
         </AppLayout>

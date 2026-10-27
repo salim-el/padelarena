@@ -81,6 +81,22 @@ class BookingController extends Controller
         ]);
     }
 
+    /** Revanche : même terrain, même heure de Bruxelles, une semaine plus tard. */
+    public function rematch(Request $request, Booking $booking): RedirectResponse
+    {
+        $this->ensureOwner($request, $booking);
+        abort_unless(in_array($booking->status, ['confirmed', 'used'], true), 404);
+        // La semaine s'ajoute en heure locale : le passage à l'heure d'hiver ne décale pas la revanche.
+        $start = Clock::local($booking->starts_at)->addWeek()->utc();
+        try {
+            $next = $this->bookings->hold($request->user(), $booking->court, $start);
+        } catch (BookingException $e) {
+            return back()->withErrors(['booking' => $e->getMessage()]);
+        }
+
+        return to_route('bookings.checkout', $next);
+    }
+
     public function cancel(Request $request, Booking $booking): RedirectResponse
     {
         $this->ensureOwner($request, $booking);

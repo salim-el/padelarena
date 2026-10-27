@@ -3,7 +3,7 @@ import { StatusBadge } from '@/components/status-badge';
 import AppLayout from '@/layouts/app-layout';
 import { euros, GAME_MODES, ucfirst } from '@/lib/money';
 import { Head, router, usePage } from '@inertiajs/react';
-import { CalendarDays, Clock, FileText } from 'lucide-react';
+import { CalendarDays, Clock, FileText, RotateCcw } from 'lucide-react';
 
 type Booking = {
     id: string;
@@ -113,6 +113,15 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
                     </footer>
                 </article>
 
+                {['confirmed', 'used'].includes(booking.status) && (
+                    <button
+                        type="button"
+                        onClick={() => router.post(`/bookings/${booking.id}/rematch`)}
+                        className="flex items-center justify-center gap-2 rounded-lg bg-[#C8E64A] px-4 py-3 font-bold text-[#0E1B2C] transition hover:bg-[#b5d23c] focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none"
+                    >
+                        <RotateCcw className="size-4" aria-hidden /> Revanche : même terrain, même heure, la semaine prochaine
+                    </button>
+                )}
                 {booking.cancellable && (
                     <div className="bg-card flex flex-col gap-3 rounded-2xl border p-5">
                         <p className="text-sm">

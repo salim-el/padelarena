@@ -40,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('admin', [AdminController::class, 'index'])->name('admin');
     Route::post('admin/users/{user}/suspend', [AdminController::class, 'suspend'])->name('admin.users.suspend');
     Route::post('admin/users/{user}/reactivate', [AdminController::class, 'reactivate'])->name('admin.users.reactivate');
+    Route::patch('admin/pricing-rules/{rule}', [AdminController::class, 'updatePrice'])->name('admin.pricing-rules.update');
+    Route::post('admin/closures', [AdminController::class, 'storeClosure'])->name('admin.closures.store');
+    Route::delete('admin/closures/{closure}', [AdminController::class, 'destroyClosure'])->name('admin.closures.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {

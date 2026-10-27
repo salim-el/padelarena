@@ -7,6 +7,7 @@ use App\Models\AccessPass;
 use App\Models\Booking;
 use App\Models\BookingPlayer;
 use App\Models\Court;
+use App\Models\CourtClosure;
 use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -51,6 +52,10 @@ class BookingService
         $rule = $this->slots->priceFor($startUtc);
         if ($rule === null || ! $court->is_active) {
             throw new BookingException('Ce terrain n’est pas réservable à cette heure.');
+        }
+        $end = $startUtc->addMinutes(Clock::SLOT_MINUTES);
+        if (CourtClosure::where('court_id', $court->id)->where('starts_at', '<', $end)->where('ends_at', '>', $startUtc)->exists()) {
+            throw new BookingException('Ce terrain est fermé sur ce créneau.');
         }
 
         $this->expireHolds();

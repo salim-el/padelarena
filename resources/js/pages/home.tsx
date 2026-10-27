@@ -262,7 +262,11 @@ export default function Home({ prices }: { prices: Price[] }) {
                             <div className="mt-8 grid gap-4 md:grid-cols-2">
                                 {[
                                     { title: 'Mode classique', rows: classic, highlight: false },
-                                    { title: 'Mode arcade (+14 €)', rows: arena, highlight: true },
+                                    {
+                                        title: `Mode arcade (+${euros((arena[0]?.price_cents ?? 0) - (classic[0]?.price_cents ?? 0))})`,
+                                        rows: arena,
+                                        highlight: true,
+                                    },
                                 ].map(({ title, rows, highlight }) => (
                                     <div
                                         key={title}

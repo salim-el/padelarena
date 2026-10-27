@@ -115,7 +115,11 @@ export default function Checkout({ booking }: { booking: Booking }) {
                                         />
                                         <span className={`flex justify-between gap-2 font-bold ${data.game_mode === value ? 'text-[#C8E64A]' : ''}`}>
                                             {mode.label}
-                                            <span className="text-xs">{value === 'classic' ? 'inclus' : '+14 €'}</span>
+                                            <span className="text-xs">
+                                                {value === 'classic' || booking.arcade_price_cents === null
+                                                    ? 'inclus'
+                                                    : `+${euros(booking.arcade_price_cents - booking.price_cents)}`}
+                                            </span>
                                         </span>
                                         <span className="mt-1 block text-xs opacity-80">{mode.text}</span>
                                     </label>

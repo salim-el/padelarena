@@ -5,7 +5,7 @@ import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-type Cell = { court_id: number; available: boolean; price_cents: number | null; past: boolean; off_peak: boolean };
+type Cell = { court_id: number; available: boolean; price_cents: number | null; past: boolean; off_peak: boolean; flash: boolean };
 type Row = { time: string; end: string; starts_at: string; cells: Cell[] };
 type Court = { id: number; name: string; is_arena: boolean };
 type Props = { date: string; today: string; max: string; courts: Court[]; rows: Row[] };
@@ -31,6 +31,7 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
     };
 
     const slotClass = (cell: Cell) => {
+        if (cell.flash) return 'border-[#CC3342]/40 bg-[#FCE6E8] text-[#9E2833] hover:bg-[#f8d5d9]';
         if (cell.off_peak) return 'border-[#1D5C7A]/25 bg-[#E3F0F7] text-[#1D5C7A] hover:bg-[#cfe6f2]';
         return 'border-[#DAD7CC] bg-white text-[#0E1B2C] hover:border-[#C8E64A] hover:bg-[#EEF4D6]';
     };
@@ -105,8 +106,12 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                                                         className={`flex h-14 w-full flex-col items-center justify-center rounded-lg border px-2 text-center font-semibold transition focus-visible:ring-2 focus-visible:ring-[#1D5C7A] focus-visible:outline-none ${slotClass(cell)}`}
                                                     >
                                                         {euros(cell.price_cents)}
-                                                        {cell.off_peak && (
-                                                            <span className="block text-[11px] font-normal opacity-80">heure creuse</span>
+                                                        {cell.flash ? (
+                                                            <span className="block text-[11px] font-bold">flash −20 %</span>
+                                                        ) : (
+                                                            cell.off_peak && (
+                                                                <span className="block text-[11px] font-normal opacity-80">heure creuse</span>
+                                                            )
                                                         )}
                                                     </button>
                                                 ) : (
@@ -129,6 +134,9 @@ export default function Planning({ date, today, max, courts, rows }: Props) {
                     </span>
                     <span className="flex items-center gap-2">
                         <span className="size-3 rounded-sm bg-[#E3F0F7]" aria-hidden /> Heure creuse
+                    </span>
+                    <span className="flex items-center gap-2">
+                        <span className="size-3 rounded-sm bg-[#FCE6E8] ring-1 ring-[#CC3342]/40" aria-hidden /> Flash : −20 % à moins de 3 h du début
                     </span>
                     <span className="flex items-center gap-2">
                         <span className="size-3 rounded-sm bg-[#0E1B2C] ring-1 ring-[#C8E64A]" aria-hidden /> Mode arcade sur tous les terrains : +14

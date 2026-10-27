@@ -121,7 +121,7 @@ class BookingController extends Controller
             'free_cancellation_until' => Clock::local($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS))->locale('fr')->isoFormat('dddd D MMMM [à] HH:mm'),
             'cancellable' => $b->status === 'confirmed' && $b->starts_at->isFuture(),
             'game_mode' => $b->game_mode,
-            'arcade_price_cents' => app(SlotService::class)->priceFor($b->starts_at, true)?->price_cents,
+            'arcade_price_cents' => ($supplement = app(SlotService::class)->arcadeSupplement($b->starts_at)) === null ? null : $b->price_cents + $supplement,
         ];
     }
 }

@@ -70,7 +70,7 @@ class BookingService
                     'starts_at' => $startUtc,
                     'ends_at' => $startUtc->addMinutes(Clock::SLOT_MINUTES),
                     'status' => 'pending_payment',
-                    'price_cents' => $rule->price_cents,
+                    'price_cents' => $this->slots->priceCents($rule, $startUtc),
                     'vat_rate' => $rule->vat_rate,
                     'is_arena' => false,
                     'hold_expires_at' => now()->addMinutes(self::HOLD_MINUTES),
@@ -104,11 +104,14 @@ class BookingService
             // Un mode arcade remplace le prix classique par le tarif arcade du même créneau (+14 €).
             if ($gameMode !== null && $gameMode !== 'classic') {
                 $rule = $this->slots->priceFor($booking->starts_at, true);
-                if ($rule === null) {
+                $supplement = $this->slots->arcadeSupplement($booking->starts_at);
+                if ($rule === null || $supplement === null) {
                     throw new BookingException('Le mode arcade n’est pas disponible sur ce créneau.');
                 }
-                $booking->update(['is_arena' => true, 'game_mode' => $gameMode, 'pricing_rule_id' => $rule->id, 'price_cents' => $rule->price_cents, 'vat_rate' => $rule->vat_rate]);
-                $player->update(['share_cents' => $rule->price_cents]);
+                // Le supplément s'ajoute au prix déjà bloqué, remise flash comprise.
+                $price = $booking->price_cents + $supplement;
+                $booking->update(['is_arena' => true, 'game_mode' => $gameMode, 'pricing_rule_id' => $rule->id, 'price_cents' => $price, 'vat_rate' => $rule->vat_rate]);
+                $player->update(['share_cents' => $price]);
             }
             $payment = Payment::create([
                 'booking_id' => $booking->id,

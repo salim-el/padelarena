@@ -9,6 +9,32 @@ use Carbon\CarbonImmutable;
 
 class SlotService
 {
+    // shortcut: remise et délai fixés dans le code ; à rendre réglables par le gérant avec la gestion des tarifs.
+    public const FLASH_HOURS = 3;
+
+    public const FLASH_PERCENT = 20;
+
+    /** Un créneau devient « flash » quand il reste libre à moins de trois heures du début. */
+    public function isFlash(CarbonImmutable $startUtc): bool
+    {
+        return $startUtc->isFuture() && $startUtc->lte(now()->addHours(self::FLASH_HOURS));
+    }
+
+    /** Prix réellement payé pour un créneau classique : tarif, moins la remise flash éventuelle. */
+    public function priceCents(PricingRule $rule, CarbonImmutable $startUtc): int
+    {
+        return $this->isFlash($startUtc) ? (int) round($rule->price_cents * (100 - self::FLASH_PERCENT) / 100) : $rule->price_cents;
+    }
+
+    /** Supplément du mode arcade sur ce créneau : écart entre le tarif arcade et le tarif classique. */
+    public function arcadeSupplement(CarbonImmutable $startUtc): ?int
+    {
+        $classic = $this->priceFor($startUtc);
+        $arcade = $this->priceFor($startUtc, true);
+
+        return $classic && $arcade ? $arcade->price_cents - $classic->price_cents : null;
+    }
+
     /** Règle de prix d'un créneau : classique, ou arcade avec son supplément. */
     public function priceFor(CarbonImmutable $startUtc, bool $arcade = false): ?PricingRule
     {
@@ -47,7 +73,8 @@ class SlotService
                 $cells[] = [
                     'court_id' => $court->id,
                     'available' => ! $taken && $rule !== null && $start->isFuture(),
-                    'price_cents' => $rule?->price_cents,
+                    'price_cents' => $rule ? $this->priceCents($rule, $start) : null,
+                    'flash' => $rule !== null && ! $taken && $this->isFlash($start),
                     'past' => ! $start->isFuture(),
                     'off_peak' => $rule !== null && str_contains(strtolower($rule->name), 'creuses'),
                 ];

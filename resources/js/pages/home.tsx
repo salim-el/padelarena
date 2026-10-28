@@ -80,7 +80,10 @@ export default function Home({ prices }: { prices: Price[] }) {
                             <span className="flex size-9 items-center justify-center rounded-md bg-[#C8E64A]">
                                 <AppLogoIcon className="size-6 fill-current text-[#0E1B2C]" />
                             </span>
-                            PadelArena
+                            <span>
+                                PadelArena
+                                <span className="ml-0.5 inline-block size-1.5 bg-[#C8E64A] ring-1 ring-[#0E1B2C]/20" aria-hidden />
+                            </span>
                         </Link>
                         <ul className="hidden items-center gap-6 text-sm font-semibold md:flex">
                             <li>

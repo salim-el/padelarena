@@ -33,13 +33,10 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
 
             <main className="flex flex-col items-center justify-center p-6 md:p-10">
                 <div className="w-full max-w-sm">
-                    <Link href={route('home')} className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#1D5C7A] hover:underline">
-                        <ArrowLeft className="size-4" aria-hidden /> Retour à l’accueil
-                    </Link>
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col items-center gap-4">
                             <Link href={route('home')} aria-label="PadelArena, retour à l’accueil">
-                                <img src="/images/logo-fond-clair.webp" alt="PadelArena" className="h-[88px] w-auto" />
+                                <img src="/images/logo-fond-clair.webp" alt="PadelArena" className="h-[114px] w-auto" />
                             </Link>
                             <div className="space-y-2 text-center">
                                 <h1 className="text-2xl font-extrabold uppercase">{title}</h1>
@@ -48,6 +45,12 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                         </div>
                         {children}
                     </div>
+                    <Link
+                        href={route('home')}
+                        className="mt-8 flex items-center justify-center gap-1.5 text-sm font-semibold text-[#1D5C7A] hover:underline"
+                    >
+                        <ArrowLeft className="size-4" aria-hidden /> Retour à l’accueil
+                    </Link>
                 </div>
             </main>
         </div>

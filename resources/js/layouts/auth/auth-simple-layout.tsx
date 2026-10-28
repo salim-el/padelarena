@@ -1,4 +1,3 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import { Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 
@@ -39,14 +38,8 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                     </Link>
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col items-center gap-4">
-                            <Link href={route('home')} className="flex items-center gap-2 font-bold">
-                                <span className="flex size-10 items-center justify-center rounded-lg bg-[#0E1B2C]">
-                                    <AppLogoIcon className="size-7 fill-current text-[#C8E64A]" />
-                                </span>
-                                <span className="text-lg">
-                                    PadelArena
-                                    <span className="ml-0.5 inline-block size-1.5 bg-[#C8E64A] ring-1 ring-[#0E1B2C]/20" aria-hidden />
-                                </span>
+                            <Link href={route('home')} aria-label="PadelArena, retour à l’accueil">
+                                <img src="/images/logo-padelarena.svg" alt="PadelArena" className="h-16 w-auto" />
                             </Link>
                             <div className="space-y-2 text-center">
                                 <h1 className="text-2xl font-extrabold uppercase">{title}</h1>

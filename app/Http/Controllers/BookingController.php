@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\Court;
+use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\Clock;
 use App\Services\SlotService;
@@ -47,17 +48,20 @@ class BookingController extends Controller
             return to_route('bookings.show', $booking);
         }
 
-        return Inertia::render('bookings/checkout', ['booking' => $this->present($booking->load('court'))]);
+        return Inertia::render('bookings/checkout', [
+            'booking' => $this->present($booking->load('court')),
+            'products' => Product::where('is_active', true)->orderBy('kind')->orderBy('name')->get(['id', 'name', 'kind', 'price_cents'])->all(),
+        ]);
     }
 
     public function pay(Request $request, Booking $booking): RedirectResponse
     {
         $this->ensureOwner($request, $booking);
-        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:classic,'.implode(',', Booking::GAME_MODES)]]);
+        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:classic,'.implode(',', Booking::GAME_MODES)], 'items' => ['nullable', 'array'], 'items.*' => ['integer', 'min:0', 'max:4']]);
         try {
-            $this->bookings->confirmPayment($booking, $request->user(), $data['game_mode'] ?? null);
+            $this->bookings->confirmPayment($booking, $request->user(), $data['game_mode'] ?? null, $data['items'] ?? []);
         } catch (BookingException $e) {
-            return to_route('planning')->withErrors(['booking' => $e->getMessage()]);
+            return back()->withErrors(['booking' => $e->getMessage()]);
         }
 
         return to_route('bookings.show', $booking)->with('success', 'Réservation confirmée. Votre facture est disponible.');
@@ -66,7 +70,7 @@ class BookingController extends Controller
     public function show(Request $request, Booking $booking): Response
     {
         $this->ensureOwner($request, $booking);
-        $booking->load('court', 'players.accessPass', 'invoices');
+        $booking->load('court', 'players.accessPass', 'invoices', 'items.product');
         $player = $booking->players->firstWhere('is_organizer', true);
         $pass = $player?->accessPass;
         $qr = $pass && $pass->revoked_at === null && in_array($booking->status, ['confirmed', 'used'], true)
@@ -77,6 +81,7 @@ class BookingController extends Controller
             'booking' => $this->present($booking),
             'qr' => $qr,
             'qr_window' => $pass ? Clock::local($pass->valid_from)->format('H:i').' – '.Clock::local($pass->valid_until)->format('H:i') : null,
+            'items' => $booking->items->map(fn ($i) => ['name' => $i->product->name, 'quantity' => $i->quantity, 'total_cents' => $i->quantity * $i->unit_price_cents])->all(),
             'invoices' => $booking->invoices->map(fn ($i) => ['number' => $i->number, 'total_cents' => $i->total_cents, 'vat_cents' => $i->vat_cents])->all(),
         ]);
     }

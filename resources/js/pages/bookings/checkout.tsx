@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { euros, GAME_MODES, ucfirst } from '@/lib/money';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { CalendarDays, Clock, ShieldAlert, ShieldCheck, Timer } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -21,14 +21,21 @@ type Booking = {
     arcade_price_cents: number | null;
 };
 
-export default function Checkout({ booking }: { booking: Booking }) {
-    const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean; game_mode: string | null }>({
+type Product = { id: number; name: string; kind: 'rental' | 'sale'; price_cents: number };
+
+export default function Checkout({ booking, products }: { booking: Booking; products: Product[] }) {
+    const { data, setData, post, processing, errors } = useForm<{ accept_terms: boolean; game_mode: string | null; items: Record<number, number> }>({
         accept_terms: false,
         game_mode: 'classic',
+        items: {},
     });
+    const pageErrors = usePage<{ errors: Record<string, string> }>().props.errors;
     const [left, setLeft] = useState(0);
     const arcade = data.game_mode !== 'classic' && booking.arcade_price_cents !== null;
-    const total = arcade ? (booking.arcade_price_cents as number) : booking.price_cents;
+    const court = arcade ? (booking.arcade_price_cents as number) : booking.price_cents;
+    const extras = products.reduce((sum, p) => sum + (data.items[p.id] ?? 0) * p.price_cents, 0);
+    const total = court + extras;
+    const setQty = (id: number, q: number) => setData('items', { ...data.items, [id]: Math.max(0, Math.min(4, q)) });
 
     useEffect(() => {
         const tick = () => setLeft(Math.max(0, Math.floor((new Date(booking.hold_expires_at ?? 0).getTime() - Date.now()) / 1000)));
@@ -127,6 +134,47 @@ export default function Checkout({ booking }: { booking: Booking }) {
                             </div>
                             {errors.game_mode && <p className="text-sm text-[#9E2833]">Choisissez un des modes de jeu proposés.</p>}
                         </fieldset>
+                    )}
+                    {products.length > 0 && (
+                        <fieldset className="flex flex-col gap-2">
+                            <legend className="mb-2 font-bold">Matériel</legend>
+                            {products.map((p) => (
+                                <div key={p.id} className="bg-card flex items-center justify-between gap-3 rounded-xl border p-3 text-sm">
+                                    <span>
+                                        <span className="font-semibold">{p.name}</span>
+                                        <span className="text-muted-foreground block text-xs">
+                                            {euros(p.price_cents)} {p.kind === 'rental' ? 'par partie' : 'l’unité'} · TVA 21 %
+                                        </span>
+                                    </span>
+                                    <span className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setQty(p.id, (data.items[p.id] ?? 0) - 1)}
+                                            className="size-8 rounded-md border font-bold"
+                                            aria-label={`Retirer : ${p.name}`}
+                                        >
+                                            −
+                                        </button>
+                                        <span className="w-6 text-center font-semibold" aria-live="polite">
+                                            {data.items[p.id] ?? 0}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setQty(p.id, (data.items[p.id] ?? 0) + 1)}
+                                            className="size-8 rounded-md border font-bold"
+                                            aria-label={`Ajouter : ${p.name}`}
+                                        >
+                                            +
+                                        </button>
+                                    </span>
+                                </div>
+                            ))}
+                        </fieldset>
+                    )}
+                    {pageErrors.booking && (
+                        <p role="alert" className="rounded-lg border border-[#9E2833]/30 bg-[#FCE6E8] p-3 text-sm text-[#9E2833]">
+                            {pageErrors.booking}
+                        </p>
                     )}
                     <label className="flex items-start gap-3 text-sm">
                         <input

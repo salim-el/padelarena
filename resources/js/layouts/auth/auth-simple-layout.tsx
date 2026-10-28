@@ -13,7 +13,7 @@ interface AuthLayoutProps {
 export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     return (
         <div className="grid min-h-svh bg-[#F7F6F1] text-[#0E1B2C] lg:grid-cols-2">
-            <aside className="relative h-48 overflow-hidden bg-[#0E1B2C] lg:order-2 lg:h-auto">
+            <aside className="relative h-48 overflow-hidden bg-[#0E1B2C] lg:sticky lg:top-0 lg:order-2 lg:h-svh">
                 <img
                     src="/images/connexion-1000.webp"
                     srcSet="/images/connexion-500.webp 500w, /images/connexion-1000.webp 1000w"
@@ -43,7 +43,10 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                                 <span className="flex size-10 items-center justify-center rounded-lg bg-[#0E1B2C]">
                                     <AppLogoIcon className="size-7 fill-current text-[#C8E64A]" />
                                 </span>
-                                <span className="text-lg">PadelArena</span>
+                                <span className="text-lg">
+                                    PadelArena
+                                    <span className="ml-0.5 inline-block size-1.5 bg-[#C8E64A] ring-1 ring-[#0E1B2C]/20" aria-hidden />
+                                </span>
                             </Link>
                             <div className="space-y-2 text-center">
                                 <h1 className="text-2xl font-extrabold uppercase">{title}</h1>

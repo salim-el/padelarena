@@ -22,10 +22,11 @@ type Props = {
     booking: Booking;
     qr: string | null;
     qr_window: string | null;
+    items: { name: string; quantity: number; total_cents: number }[];
     invoices: { number: string; total_cents: number; vat_cents: number }[];
 };
 
-export default function Show({ booking, qr, qr_window, invoices }: Props) {
+export default function Show({ booking, qr, qr_window, items, invoices }: Props) {
     const { errors } = usePage<{ errors: Record<string, string> }>().props;
 
     const cancel = () => {
@@ -93,6 +94,14 @@ export default function Show({ booking, qr, qr_window, invoices }: Props) {
                     </div>
 
                     <footer className="space-y-1 px-6 py-4 text-sm">
+                        {items.map((i) => (
+                            <p key={i.name} className="flex justify-between gap-3 text-[#5F6B78]">
+                                <span>
+                                    {i.quantity} × {i.name}
+                                </span>
+                                <span>{euros(i.total_cents)}</span>
+                            </p>
+                        ))}
                         {invoices.length > 0 ? (
                             invoices.map((i) => (
                                 <p key={i.number} className="flex items-center justify-between gap-3">

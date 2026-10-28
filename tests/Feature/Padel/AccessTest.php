@@ -60,7 +60,8 @@ class AccessTest extends TestCase
 
     public function test_only_staff_can_open_the_kiosk(): void
     {
-        $this->actingAs(User::where('role', 'player')->first())->get('/kiosk')->assertForbidden();
+        // Joueur actif désigné par son e-mail : sans ordre, PostgreSQL peut rendre le compte suspendu, qui est déconnecté au lieu de recevoir 403.
+        $this->actingAs(User::where('email', 'lucas.martin@example.test')->first())->get('/kiosk')->assertForbidden();
         $this->actingAs(User::where('role', 'manager')->first())->get('/kiosk')->assertOk();
     }
 }

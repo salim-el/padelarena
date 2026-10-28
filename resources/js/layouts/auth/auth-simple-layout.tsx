@@ -39,7 +39,7 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                     <div className="flex flex-col gap-8">
                         <div className="flex flex-col items-center gap-4">
                             <Link href={route('home')} aria-label="PadelArena, retour à l’accueil">
-                                <img src="/images/logo-padelarena.svg" alt="PadelArena" className="h-16 w-auto" />
+                                <img src="/images/logo-fond-clair.webp" alt="PadelArena" className="h-20 w-auto" />
                             </Link>
                             <div className="space-y-2 text-center">
                                 <h1 className="text-2xl font-extrabold uppercase">{title}</h1>

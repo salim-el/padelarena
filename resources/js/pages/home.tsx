@@ -1,4 +1,3 @@
-import AppLogoIcon from '@/components/app-logo-icon';
 import { euros } from '@/lib/money';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -76,14 +75,8 @@ export default function Home({ prices }: { prices: Price[] }) {
 
                 <header className={NAVY}>
                     <nav aria-label="Navigation principale" className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-                        <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-                            <span className="flex size-9 items-center justify-center rounded-md bg-[#C8E64A]">
-                                <AppLogoIcon className="size-6 fill-current text-[#0E1B2C]" />
-                            </span>
-                            <span>
-                                PadelArena
-                                <span className="ml-0.5 inline-block size-1.5 bg-[#C8E64A] ring-1 ring-[#0E1B2C]/20" aria-hidden />
-                            </span>
+                        <Link href="/" aria-label="PadelArena, accueil">
+                            <img src="/images/logo-fond-sombre.webp" alt="PadelArena" className="h-11 w-auto" />
                         </Link>
                         <ul className="hidden items-center gap-6 text-sm font-semibold md:flex">
                             <li>

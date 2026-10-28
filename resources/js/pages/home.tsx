@@ -76,7 +76,7 @@ export default function Home({ prices }: { prices: Price[] }) {
                 <header className={NAVY}>
                     <nav aria-label="Navigation principale" className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
                         <Link href="/" aria-label="PadelArena, accueil">
-                            <img src="/images/logo-fond-sombre.webp" alt="PadelArena" className="h-11 w-auto" />
+                            <img src="/images/logo-fond-sombre.webp" alt="PadelArena" className="h-12 w-auto" />
                         </Link>
                         <ul className="hidden items-center gap-6 text-sm font-semibold md:flex">
                             <li>

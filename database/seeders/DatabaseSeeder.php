@@ -34,8 +34,8 @@ class DatabaseSeeder extends Seeder
         Product::create(['name' => 'Tube de 3 balles neuves', 'kind' => 'sale', 'price_cents' => 600, 'vat_rate' => 21, 'stock' => 40]);
         User::create(['name' => 'Lucas Martin', 'email' => 'lucas.martin@example.test', 'password' => Hash::make(self::DEMO_PASSWORD), 'email_verified_at' => now(), 'role' => 'player']);
         foreach ([['Inès Laurent', 'ines.laurent@example.test', now(), 'active'],
-                  ['Thomas Peeters', 'thomas.peeters@example.test', null, 'active'],
-                  ['Yassin Benali', 'yassin.benali@example.test', now(), 'suspended']] as [$name, $email, $verified, $status]) {
+            ['Thomas Peeters', 'thomas.peeters@example.test', null, 'active'],
+            ['Yassin Benali', 'yassin.benali@example.test', now(), 'suspended']] as [$name, $email, $verified, $status]) {
             User::create(['name' => $name, 'email' => $email, 'password' => Hash::make(self::DEMO_PASSWORD), 'email_verified_at' => $verified, 'role' => 'player', 'status' => $status]);
         }
         User::create(['name' => 'Marc Dumont', 'email' => 'marc.dumont@example.test', 'password' => Hash::make(self::DEMO_PASSWORD), 'email_verified_at' => now(), 'role' => 'manager']);

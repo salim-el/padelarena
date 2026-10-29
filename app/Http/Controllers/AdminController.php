@@ -60,14 +60,14 @@ class AdminController extends Controller
                 ->when($search !== '', fn ($q) => $q->where(fn ($q) => $q->whereLike('name', "%{$search}%")->orWhereLike('email', "%{$search}%")))
                 ->orderBy('role')->orderBy('name')
                 ->paginate(15)->withQueryString()->through(fn (User $u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-                'email' => $u->email,
-                'verified' => $u->email_verified_at !== null,
-                'role' => $u->role,
-                'status' => $u->status,
-                'created_at' => $u->created_at?->setTimezone(Clock::ZONE)->format('d/m/Y'),
-            ]),
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'verified' => $u->email_verified_at !== null,
+                    'role' => $u->role,
+                    'status' => $u->status,
+                    'created_at' => $u->created_at?->setTimezone(Clock::ZONE)->format('d/m/Y'),
+                ]),
         ]);
     }
 

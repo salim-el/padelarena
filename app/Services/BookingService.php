@@ -148,6 +148,8 @@ class BookingService
                 'payment_id' => $payment->id,
                 'issued_at' => now(),
                 'customer_name' => $user->name,
+                'customer_company' => $user->company_name,
+                'customer_vat' => $user->vat_number,
                 'net_cents' => $net,
                 'vat_rate' => $booking->vat_rate,
                 'vat_cents' => $amount - $net,

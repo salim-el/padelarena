@@ -8,7 +8,7 @@ class Invoice extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['number', 'booking_id', 'payment_id', 'issued_at', 'customer_name', 'net_cents', 'vat_rate', 'vat_cents', 'total_cents'];
+    protected $fillable = ['number', 'booking_id', 'payment_id', 'issued_at', 'customer_name', 'customer_company', 'customer_vat', 'net_cents', 'vat_rate', 'vat_cents', 'total_cents'];
 
     protected function casts(): array
     {

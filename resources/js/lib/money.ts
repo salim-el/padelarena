@@ -33,9 +33,10 @@ export const shortMonth = (m: string | undefined) => (m ? (MONTHS[m] ?? m) : '')
 
 export const GAME_MODES: Record<string, { label: string; text: string }> = {
     classic: { label: 'Classique', text: 'Un match de padel normal, sans supplément.' },
-    zone_hunt: { label: 'Chasse aux zones', text: 'Une zone verte s’allume : placez la balle dedans pour marquer des points bonus.' },
-    duel: { label: 'Duel', text: 'Deux équipes, deux couleurs. Chaque zone gagnée reste allumée à vos couleurs.' },
-    free: { label: 'Jeu libre', text: 'Un match normal avec l’ambiance arcade : lumière, son et score affiché.' },
+    arcade: {
+        label: 'Arcade',
+        text: 'Les règles du padel, avec des zones lumineuses en miroir dans les deux camps : Or (point double), Rouge (faute) et Bleue (points Arena).',
+    },
 };
 
 // Supplément du mode arcade, identique à l'écart des tarifs (48 € → 62 €).

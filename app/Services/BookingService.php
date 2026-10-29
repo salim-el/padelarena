@@ -12,8 +12,8 @@ use App\Models\CourtClosure;
 use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
-use App\Models\Product;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Refund;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -29,9 +29,7 @@ class BookingService
 
     public const FREE_CANCELLATION_HOURS = 24;
 
-    public function __construct(private SlotService $slots)
-    {
-    }
+    public function __construct(private SlotService $slots) {}
 
     /** Libère les créneaux bloqués dont les dix minutes sont écoulées. */
     public function expireHolds(): int

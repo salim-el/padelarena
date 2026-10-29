@@ -42,6 +42,23 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_five_failures_lock_the_login_for_15_minutes()
+    {
+        $user = User::factory()->create();
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/login', ['email' => $user->email, 'password' => 'mauvais-mot-de-passe']);
+        }
+
+        // Même avec le bon mot de passe, la connexion reste bloquée pendant 15 minutes.
+        $this->travel(14)->minutes();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertSessionHasErrors('email');
+        $this->assertGuest();
+
+        $this->travel(2)->minutes();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+        $this->assertAuthenticated();
+    }
+
     public function test_users_can_logout()
     {
         $user = User::factory()->create();

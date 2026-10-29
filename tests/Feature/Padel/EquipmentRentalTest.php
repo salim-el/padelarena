@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Padel;
 
-use App\Models\Booking;
 use App\Models\Court;
 use App\Models\Product;
 use App\Models\User;

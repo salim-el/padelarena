@@ -298,7 +298,7 @@ export default function Dashboard({
                                 <input
                                     value={closure.data.reason}
                                     onChange={(e) => closure.setData('reason', e.target.value)}
-                                    placeholder="Vitre à remplacer"
+                                    placeholder="Réparation du gazon"
                                     className="bg-card mt-1 block w-full rounded-md border px-2 py-1.5"
                                 />
                             </label>

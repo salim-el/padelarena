@@ -33,7 +33,7 @@ Noms en anglais, en minuscules, mots séparés par des tirets.
 | `feature/password-policy` | Mot de passe de 15 caractères minimum |
 | `bugfix/confirm-password-throttle` | Limite d'essais sur la confirmation du mot de passe |
 
-## Déjà sur `develop` (entrera dans la bêta)
+## Version alpha — v0.1.0-alpha (octobre 2026)
 
 | Branche | Contenu |
 |---|---|
@@ -41,6 +41,11 @@ Noms en anglais, en minuscules, mots séparés par des tirets.
 | `feature/app-visual-refresh`, `bugfix/planning-cell-size` | Nouveau visuel des écrans connectés |
 | `feature/arena-game-mode`, `feature/auth-layout-and-arcade` | Mode arcade sur les six terrains (+14 €), choix au paiement ; écrans de connexion revus |
 | `feature/arcade-zones` | Un seul mode Arcade, aligné sur le document de conception : zones Or (point double), Rouge (faute) et Bleue (points Arena) |
+| `feature/flash-slots`, `feature/rematch` | Créneaux flash (-20 % à moins de 3 h) ; revanche la semaine suivante |
+| `feature/court-management` | Tarifs et fermetures de terrains gérés par le gérant |
+| `feature/equipment-rental` | Location et vente de matériel ; facture à plusieurs lignes (6 % terrain, 21 % matériel) ; stock par créneau |
+| `feature/company-accounts` | Inscription en particulier ou en entreprise ; numéro de TVA belge contrôlé et repris sur la facture |
+| `chore/ci-github-actions` | Intégration continue : Pint, Prettier, ESLint et PHPUnit sur PostgreSQL 16 |
 
 ## Version bêta — v0.2.0-beta (prévue début décembre 2026)
 
@@ -52,8 +57,7 @@ Dates cibles. Chaque branche est créée au moment où le travail commence.
 | 03/11 – 14/11 | `feature/split-payment` | Partage du prix entre les quatre joueurs, invitations, carte de garantie |
 | 10/11 – 21/11 | `feature/open-matches` | Annonce pour compléter une partie, liste d'attente (dépend du partage du prix) |
 | 10/11 – 21/11 | `feature/arena-mode` | Moteur de jeu Arcade : 5 séquences de zones prédéfinies, point double, faute, point en or ; validation des rebonds sur tablette et simulateur web ; score en direct |
-| 17/11 – 26/11 | `feature/equipment-rental` | Location de matériel ; factures à plusieurs lignes (TVA 21 % sur le matériel, 6 % sur le terrain) ; stock limité |
-| 17/11 – 26/11 | `feature/court-management` | Tarifs, terrains, fermetures exceptionnelles gérés par le gérant |
+| 17/11 – 26/11 | `feature/security-hardening` | Double authentification du personnel, en-têtes CSP, refus des mots de passe déjà fuités |
 | 24/11 – 01/12 | `feature/accessibility-audit` | Contrôle WCAG 2.1 AA de tous les écrans, corrections |
 | 01/12 – 05/12 | `release/0.2.0-beta` | Tests de bout en bout, documentation, étiquette `v0.2.0-beta` |
 
@@ -61,8 +65,6 @@ Dates cibles. Chaque branche est créée au moment où le travail commence.
 
 | Idée | Intérêt | Difficulté |
 |---|---|---|
-| Créneaux flash | Remise automatique sur un terrain encore libre à moins de 3 h | Faible |
-| Revanche en un clic | Proposer aux quatre joueurs de rejouer, avec leurs disponibilités communes | Faible |
 | Réservation récurrente | Le même créneau chaque semaine pour un groupe fixe | Moyenne |
 | Points Arena, défis et paliers | Fidélité du document de conception : points gagnés en partie, défis récompensés au bar, paliers de récompenses | Moyenne |
 | Événement privé | Plusieurs terrains en même temps pour une entreprise ou un anniversaire, classement commun | Moyenne |

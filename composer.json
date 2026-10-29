@@ -1,15 +1,16 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "salim-el/padelarena",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "PadelArena : réservation de terrains de padel, accès par QR code et mode Arcade.",
     "keywords": [
         "laravel",
-        "framework"
+        "padel",
+        "reservation"
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "chillerlan/php-qrcode": "^6.0",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^13.0",

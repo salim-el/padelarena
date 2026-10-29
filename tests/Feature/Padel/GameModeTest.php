@@ -43,9 +43,9 @@ class GameModeTest extends TestCase
         foreach (['Terrain 1', 'Terrain 6'] as $court) {
             $booking = $this->hold($court);
             $this->assertSame(4800, $booking->price_cents);
-            $this->pay($booking, ['game_mode' => 'duel'])->assertRedirect();
+            $this->pay($booking, ['game_mode' => 'arcade'])->assertRedirect();
             $booking->refresh();
-            $this->assertSame('duel', $booking->game_mode);
+            $this->assertSame('arcade', $booking->game_mode);
             $this->assertTrue($booking->is_arena);
             $this->assertSame(6200, $booking->price_cents);
             $this->assertSame(6200, DB::table('invoices')->where('booking_id', $booking->id)->value('total_cents'));
@@ -55,7 +55,7 @@ class GameModeTest extends TestCase
     public function test_off_peak_arcade_also_costs_14_euros_more(): void
     {
         $booking = $this->hold('Terrain 2', '10:30');
-        $this->pay($booking, ['game_mode' => 'zone_hunt']);
+        $this->pay($booking, ['game_mode' => 'arcade']);
         $this->assertSame(3360 + 1400, $booking->refresh()->price_cents);
     }
 
@@ -69,10 +69,13 @@ class GameModeTest extends TestCase
         $this->assertSame(4800, DB::table('invoices')->where('booking_id', $booking->id)->value('total_cents'));
     }
 
-    public function test_an_unknown_game_mode_is_refused(): void
+    public function test_an_unknown_or_retired_game_mode_is_refused(): void
     {
         $booking = $this->hold('Terrain 4');
-        $this->pay($booking, ['game_mode' => 'triche'])->assertSessionHasErrors('game_mode');
+        // « duel » faisait partie des anciens scénarios, remplacés par le seul mode Arcade.
+        foreach (['triche', 'duel'] as $mode) {
+            $this->pay($booking, ['game_mode' => $mode])->assertSessionHasErrors('game_mode');
+        }
         $this->assertSame('pending_payment', $booking->refresh()->status);
     }
 
@@ -80,6 +83,6 @@ class GameModeTest extends TestCase
     {
         $booking = $this->hold('Terrain 1');
         $this->expectException(QueryException::class);
-        DB::table('bookings')->where('id', $booking->id)->update(['game_mode' => 'duel']);
+        DB::table('bookings')->where('id', $booking->id)->update(['game_mode' => 'arcade']);
     }
 }

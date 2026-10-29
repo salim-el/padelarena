@@ -1,7 +1,7 @@
 import { euros } from '@/lib/money';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { CalendarDays, CreditCard, QrCode, Swords, Target, Trophy } from 'lucide-react';
+import { Ban, CalendarDays, CreditCard, QrCode, Target, Trophy } from 'lucide-react';
 
 type Price = { name: string; start: string; end: string; price_cents: number; is_arena: boolean };
 
@@ -177,8 +177,9 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Mode arcade</p>
                                     <h2 className="mt-2 text-3xl font-extrabold uppercase md:text-4xl">Votre match devient une partie</h2>
                                     <p className="mt-4 max-w-2xl text-[#F7F6F1]/80">
-                                        Des LED dans les cadres des vitres et un éclairage par zone équipent chacun des six terrains. Vous choisissez
-                                        le mode de jeu en réservant, le terrain s’allume, et chaque échange peut rapporter ou coûter des points.
+                                        Des bordures LED encastrées sous le gazon dessinent des zones sur chacun des six terrains. Les règles restent
+                                        celles du padel : avant certains points, une zone s’allume au même endroit dans les deux camps et change la
+                                        valeur du point.
                                     </p>
                                 </div>
                                 <Photo
@@ -191,19 +192,19 @@ export default function Home({ prices }: { prices: Price[] }) {
                             <ul className="mt-10 grid gap-4 md:grid-cols-3">
                                 {[
                                     {
-                                        icon: Target,
-                                        title: 'Chasse aux zones',
-                                        text: 'Une zone verte s’allume. Placez la balle dedans pour marquer des points bonus avant qu’elle ne change de place.',
-                                    },
-                                    {
-                                        icon: Swords,
-                                        title: 'Duel',
-                                        text: 'Deux équipes, deux couleurs. Chaque zone gagnée reste allumée à vos couleurs jusqu’au prochain point.',
-                                    },
-                                    {
                                         icon: Trophy,
-                                        title: 'Jeu libre',
-                                        text: 'Un match classique avec l’ambiance arcade : lumière, son et score affiché sur l’écran du terrain.',
+                                        title: 'Zone Or',
+                                        text: 'Gagnez le point avec une balle qui a rebondi dans la zone Or adverse : il compte double.',
+                                    },
+                                    {
+                                        icon: Ban,
+                                        title: 'Zone Rouge',
+                                        text: 'Une balle dont le premier rebond tombe dans la zone Rouge adverse est faute, comme une balle dehors.',
+                                    },
+                                    {
+                                        icon: Target,
+                                        title: 'Zone Bleue',
+                                        text: 'Un point gagné avec un rebond dans la zone Bleue adverse rapporte des points Arena, sans changer le score.',
                                     },
                                 ].map(({ icon: Icon, title, text }) => (
                                     <li key={title} className="rounded-xl border border-[#C8E64A]/30 bg-[#17304A] p-6">
@@ -215,11 +216,13 @@ export default function Home({ prices }: { prices: Price[] }) {
                             </ul>
                             <p className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#F7F6F1]/80">
                                 <span className="flex items-center gap-2">
-                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#C8E64A]" aria-hidden /> zone bonus
+                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#F2C94C]" aria-hidden /> zone Or : point double
                                 </span>
                                 <span className="flex items-center gap-2">
-                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#CC3342]" aria-hidden /> zone malus : la balle qui y
-                                    tombe coûte des points
+                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#CC3342]" aria-hidden /> zone Rouge : faute
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="inline-block size-3 shrink-0 rounded-sm bg-[#4A90D9]" aria-hidden /> zone Bleue : points Arena
                                 </span>
                             </p>
                             <Link href="/planning" className={`${CTA} mt-8`}>

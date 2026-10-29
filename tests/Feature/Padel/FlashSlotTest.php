@@ -41,7 +41,7 @@ class FlashSlotTest extends TestCase
     public function test_arcade_on_a_flash_slot_adds_14_euros_to_the_discounted_price(): void
     {
         $booking = app(BookingService::class)->hold($this->lucas, Court::where('name', 'Terrain 2')->first(), Clock::slotStart('2026-10-23', '18:00'));
-        $this->actingAs($this->lucas)->post("/bookings/{$booking->public_id}/pay", ['accept_terms' => '1', 'game_mode' => 'duel']);
+        $this->actingAs($this->lucas)->post("/bookings/{$booking->public_id}/pay", ['accept_terms' => '1', 'game_mode' => 'arcade']);
         $this->assertSame(3840 + 1400, $booking->refresh()->price_cents);
     }
 

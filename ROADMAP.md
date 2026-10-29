@@ -40,6 +40,7 @@ Noms en anglais, en minuscules, mots séparés par des tirets.
 | `feature/home-page`, `feature/home-images` | Page d'accueil publique, photos |
 | `feature/app-visual-refresh`, `bugfix/planning-cell-size` | Nouveau visuel des écrans connectés |
 | `feature/arena-game-mode`, `feature/auth-layout-and-arcade` | Mode arcade sur les six terrains (+14 €), choix au paiement ; écrans de connexion revus |
+| `feature/arcade-zones` | Un seul mode Arcade, aligné sur le document de conception : zones Or (point double), Rouge (faute) et Bleue (points Arena) |
 
 ## Version bêta — v0.2.0-beta (prévue début décembre 2026)
 
@@ -50,7 +51,7 @@ Dates cibles. Chaque branche est créée au moment où le travail commence.
 | 27/10 – 07/11 | `feature/stripe-payment` | Paiement réel en mode test Stripe, confirmation par notification signée |
 | 03/11 – 14/11 | `feature/split-payment` | Partage du prix entre les quatre joueurs, invitations, carte de garantie |
 | 10/11 – 21/11 | `feature/open-matches` | Annonce pour compléter une partie, liste d'attente (dépend du partage du prix) |
-| 10/11 – 21/11 | `feature/arena-mode` | Pilotage des LED des six terrains, score en direct, arrêt d'urgence |
+| 10/11 – 21/11 | `feature/arena-mode` | Moteur de jeu Arcade : 5 séquences de zones prédéfinies, point double, faute, point en or ; validation des rebonds sur tablette et simulateur web ; score en direct |
 | 17/11 – 26/11 | `feature/equipment-rental` | Location de matériel ; factures à plusieurs lignes (TVA 21 % sur le matériel, 6 % sur le terrain) ; stock limité |
 | 17/11 – 26/11 | `feature/court-management` | Tarifs, terrains, fermetures exceptionnelles gérés par le gérant |
 | 24/11 – 01/12 | `feature/accessibility-audit` | Contrôle WCAG 2.1 AA de tous les écrans, corrections |
@@ -63,9 +64,10 @@ Dates cibles. Chaque branche est créée au moment où le travail commence.
 | Créneaux flash | Remise automatique sur un terrain encore libre à moins de 3 h | Faible |
 | Revanche en un clic | Proposer aux quatre joueurs de rejouer, avec leurs disponibilités communes | Faible |
 | Réservation récurrente | Le même créneau chaque semaine pour un groupe fixe | Moyenne |
-| Défis arcade de la semaine | Un défi et un classement propres au club, pour faire revenir les joueurs | Moyenne |
+| Points Arena, défis et paliers | Fidélité du document de conception : points gagnés en partie, défis récompensés au bar, paliers de récompenses | Moyenne |
 | Événement privé | Plusieurs terrains en même temps pour une entreprise ou un anniversaire, classement commun | Moyenne |
 | Profil de progression | Records et zones réussies, à partir des événements mesurés par les LED | Moyenne |
+| Mode Rotatif | 3 contre 3 sur un hexagone dont le sol tourne : nouveauté future, hors TFE, après validation de l'Arcade | Élevée |
 | Ambiances lumineuses | Thèmes prédéfinis seulement, pour respecter la limite de clignotements du T03 | Moyenne |
 
 Écartée : une musique choisie par les joueurs. Diffuser de la musique dans un lieu public demande une licence payante (Unisono en Belgique).

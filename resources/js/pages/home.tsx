@@ -138,8 +138,8 @@ export default function Home({ prices }: { prices: Price[] }) {
                                     <span className="text-[#C8E64A]">version arcade.</span>
                                 </h1>
                                 <p className="mt-5 max-w-xl text-lg text-[#F7F6F1]/85">
-                                    Six terrains couverts à Anderlecht. En mode arcade, les vitres s’allument, les zones donnent des points et le
-                                    score s’affiche en direct.
+                                    Six terrains couverts à Anderlecht. En mode Arcade, des zones s’allument au sol et changent la valeur des points :
+                                    point double, faute ou points Arena.
                                 </p>
                                 <div className="mt-8 flex flex-wrap gap-3">
                                     <Link href="/planning" className={CTA}>

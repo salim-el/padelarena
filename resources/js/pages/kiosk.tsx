@@ -15,13 +15,16 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
     const { data, setData, post, processing } = useForm({ court_id: courts[0]?.id ?? 0, token: '' });
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0E1B2C] p-6 text-white">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#0E1B2C] p-6 text-[#F7F6F1]">
             <Head title="Borne d’accès" />
-            <h1 className="text-3xl font-bold">Borne d’accès</h1>
+            <div className="text-center">
+                <p className="font-mono text-sm tracking-widest text-[#C8E64A] uppercase">Arena Padel Club · Entrée</p>
+                <h1 className="mt-2 text-3xl font-extrabold uppercase">Borne d’accès</h1>
+            </div>
             {result && (
                 <div
                     role="status"
-                    className={`rounded-xl p-6 text-center text-2xl font-bold ${result.result === 'granted' ? 'bg-[#C8E64A] text-[#0E1B2C]' : 'bg-[#CC3342]'}`}
+                    className={`rounded-xl p-6 text-center text-2xl font-bold ${result.result === 'granted' ? 'bg-[#C8E64A] text-[#0E1B2C]' : 'bg-[#CC3342] text-[#F7F6F1]'}`}
                 >
                     {result.result === 'granted'
                         ? `Accès autorisé. Bon match, ${result.first_name ?? ''}`
@@ -35,7 +38,9 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
                 }}
                 className="flex w-full max-w-md flex-col gap-3"
             >
-                <label htmlFor="court">Terrain de cette borne</label>
+                <label htmlFor="court" className="text-sm font-semibold text-[#F7F6F1]/90">
+                    Terrain de cette borne
+                </label>
                 <select
                     id="court"
                     className="rounded-md border-2 border-[#C8E64A]/60 bg-white p-2 text-[#0E1B2C] focus:border-[#C8E64A] focus:outline-none"
@@ -48,7 +53,9 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
                         </option>
                     ))}
                 </select>
-                <label htmlFor="token">Contenu du QR code (simulation du lecteur)</label>
+                <label htmlFor="token" className="text-sm font-semibold text-[#F7F6F1]/90">
+                    Contenu du QR code (simulation du lecteur)
+                </label>
                 <input
                     id="token"
                     className="rounded-md border-2 border-[#C8E64A]/60 bg-white p-2 text-[#0E1B2C] focus:border-[#C8E64A] focus:outline-none"
@@ -59,7 +66,7 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
                 <Button
                     type="submit"
                     disabled={processing || !data.token}
-                    className="bg-[#C8E64A] text-[#0E1B2C] hover:bg-[#b5d23c] disabled:bg-[#C8E64A]/80 disabled:text-[#0E1B2C] disabled:opacity-100"
+                    className="bg-[#C8E64A] font-bold text-[#0E1B2C] hover:bg-[#b5d23c] disabled:bg-[#C8E64A]/80 disabled:text-[#0E1B2C] disabled:opacity-100"
                 >
                     Valider
                 </Button>

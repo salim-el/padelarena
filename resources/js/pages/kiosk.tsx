@@ -38,7 +38,7 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
                 <label htmlFor="court">Terrain de cette borne</label>
                 <select
                     id="court"
-                    className="rounded-md p-2 text-black"
+                    className="rounded-md border-2 border-[#C8E64A]/60 bg-white p-2 text-[#0E1B2C] focus:border-[#C8E64A] focus:outline-none"
                     value={data.court_id}
                     onChange={(e) => setData('court_id', Number(e.target.value))}
                 >
@@ -51,12 +51,16 @@ export default function Kiosk({ courts, result }: { courts: { id: number; name: 
                 <label htmlFor="token">Contenu du QR code (simulation du lecteur)</label>
                 <input
                     id="token"
-                    className="rounded-md p-2 text-black"
+                    className="rounded-md border-2 border-[#C8E64A]/60 bg-white p-2 text-[#0E1B2C] focus:border-[#C8E64A] focus:outline-none"
                     value={data.token}
                     onChange={(e) => setData('token', e.target.value)}
                     autoComplete="off"
                 />
-                <Button type="submit" disabled={processing || !data.token} className="bg-[#C8E64A] text-[#0E1B2C] hover:bg-[#b5d23c]">
+                <Button
+                    type="submit"
+                    disabled={processing || !data.token}
+                    className="bg-[#C8E64A] text-[#0E1B2C] hover:bg-[#b5d23c] disabled:bg-[#C8E64A]/80 disabled:text-[#0E1B2C] disabled:opacity-100"
+                >
                     Valider
                 </Button>
             </form>

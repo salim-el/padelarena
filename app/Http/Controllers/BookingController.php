@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Exceptions\BookingException;
 use App\Models\Booking;
 use App\Models\Court;
+use App\Models\Product;
 use App\Services\BookingService;
 use App\Services\Clock;
+use App\Services\SlotService;
 use Carbon\CarbonImmutable;
 use chillerlan\QRCode\QRCode;
 use Illuminate\Http\RedirectResponse;
@@ -16,9 +18,7 @@ use Inertia\Response;
 
 class BookingController extends Controller
 {
-    public function __construct(private BookingService $bookings)
-    {
-    }
+    public function __construct(private BookingService $bookings) {}
 
     public function index(Request $request): Response
     {
@@ -46,17 +46,20 @@ class BookingController extends Controller
             return to_route('bookings.show', $booking);
         }
 
-        return Inertia::render('bookings/checkout', ['booking' => $this->present($booking->load('court'))]);
+        return Inertia::render('bookings/checkout', [
+            'booking' => $this->present($booking->load('court')),
+            'products' => Product::where('is_active', true)->orderBy('kind')->orderBy('name')->get(['id', 'name', 'kind', 'price_cents'])->all(),
+        ]);
     }
 
     public function pay(Request $request, Booking $booking): RedirectResponse
     {
         $this->ensureOwner($request, $booking);
-        $request->validate(['accept_terms' => ['accepted']]);
+        $data = $request->validate(['accept_terms' => ['accepted'], 'game_mode' => ['nullable', 'in:classic,'.implode(',', Booking::GAME_MODES)], 'items' => ['nullable', 'array'], 'items.*' => ['integer', 'min:0', 'max:4']]);
         try {
-            $this->bookings->confirmPayment($booking, $request->user());
+            $this->bookings->confirmPayment($booking, $request->user(), $data['game_mode'] ?? null, $data['items'] ?? []);
         } catch (BookingException $e) {
-            return to_route('planning')->withErrors(['booking' => $e->getMessage()]);
+            return back()->withErrors(['booking' => $e->getMessage()]);
         }
 
         return to_route('bookings.show', $booking)->with('success', 'Réservation confirmée. Votre facture est disponible.');
@@ -65,7 +68,7 @@ class BookingController extends Controller
     public function show(Request $request, Booking $booking): Response
     {
         $this->ensureOwner($request, $booking);
-        $booking->load('court', 'players.accessPass', 'invoices');
+        $booking->load('court', 'players.accessPass', 'invoices', 'items.product');
         $player = $booking->players->firstWhere('is_organizer', true);
         $pass = $player?->accessPass;
         $qr = $pass && $pass->revoked_at === null && in_array($booking->status, ['confirmed', 'used'], true)
@@ -76,8 +79,25 @@ class BookingController extends Controller
             'booking' => $this->present($booking),
             'qr' => $qr,
             'qr_window' => $pass ? Clock::local($pass->valid_from)->format('H:i').' – '.Clock::local($pass->valid_until)->format('H:i') : null,
+            'items' => $booking->items->map(fn ($i) => ['name' => $i->product->name, 'quantity' => $i->quantity, 'total_cents' => $i->quantity * $i->unit_price_cents])->all(),
             'invoices' => $booking->invoices->map(fn ($i) => ['number' => $i->number, 'total_cents' => $i->total_cents, 'vat_cents' => $i->vat_cents])->all(),
         ]);
+    }
+
+    /** Revanche : même terrain, même heure de Bruxelles, une semaine plus tard. */
+    public function rematch(Request $request, Booking $booking): RedirectResponse
+    {
+        $this->ensureOwner($request, $booking);
+        abort_unless(in_array($booking->status, ['confirmed', 'used'], true), 404);
+        // La semaine s'ajoute en heure locale : le passage à l'heure d'hiver ne décale pas la revanche.
+        $start = Clock::local($booking->starts_at)->addWeek()->utc();
+        try {
+            $next = $this->bookings->hold($request->user(), $booking->court, $start);
+        } catch (BookingException $e) {
+            return back()->withErrors(['booking' => $e->getMessage()]);
+        }
+
+        return to_route('bookings.checkout', $next);
     }
 
     public function cancel(Request $request, Booking $booking): RedirectResponse
@@ -115,8 +135,12 @@ class BookingController extends Controller
             'price_cents' => $b->price_cents,
             'vat_rate' => (float) $b->vat_rate,
             'hold_expires_at' => $b->hold_expires_at?->toIso8601String(),
+            // Faux à moins de 24 h du match : l'annulation n'est plus remboursée.
+            'refundable' => now()->lte($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS)),
             'free_cancellation_until' => Clock::local($b->starts_at->subHours(BookingService::FREE_CANCELLATION_HOURS))->locale('fr')->isoFormat('dddd D MMMM [à] HH:mm'),
             'cancellable' => $b->status === 'confirmed' && $b->starts_at->isFuture(),
+            'game_mode' => $b->game_mode,
+            'arcade_price_cents' => ($supplement = app(SlotService::class)->arcadeSupplement($b->starts_at)) === null ? null : $b->price_cents + $supplement,
         ];
     }
 }

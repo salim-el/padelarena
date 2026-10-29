@@ -5,11 +5,15 @@ namespace App\Services;
 use App\Exceptions\BookingException;
 use App\Models\AccessPass;
 use App\Models\Booking;
+use App\Models\BookingItem;
 use App\Models\BookingPlayer;
 use App\Models\Court;
+use App\Models\CourtClosure;
 use App\Models\CreditNote;
 use App\Models\Invoice;
+use App\Models\InvoiceLine;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\Refund;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -25,9 +29,7 @@ class BookingService
 
     public const FREE_CANCELLATION_HOURS = 24;
 
-    public function __construct(private SlotService $slots)
-    {
-    }
+    public function __construct(private SlotService $slots) {}
 
     /** Libère les créneaux bloqués dont les dix minutes sont écoulées. */
     public function expireHolds(): int
@@ -48,9 +50,13 @@ class BookingService
         if (! in_array(Clock::local($startUtc)->format('H:i'), Clock::SLOTS, true) || ! $startUtc->isFuture() || $startUtc->gt(now()->addDays(30))) {
             throw new BookingException('Ce créneau n’existe pas ou n’est plus réservable.');
         }
-        $rule = $this->slots->priceFor($court, $startUtc);
+        $rule = $this->slots->priceFor($startUtc);
         if ($rule === null || ! $court->is_active) {
             throw new BookingException('Ce terrain n’est pas réservable à cette heure.');
+        }
+        $end = $startUtc->addMinutes(Clock::SLOT_MINUTES);
+        if (CourtClosure::where('court_id', $court->id)->where('starts_at', '<', $end)->where('ends_at', '>', $startUtc)->exists()) {
+            throw new BookingException('Ce terrain est fermé sur ce créneau.');
         }
 
         $this->expireHolds();
@@ -70,9 +76,9 @@ class BookingService
                     'starts_at' => $startUtc,
                     'ends_at' => $startUtc->addMinutes(Clock::SLOT_MINUTES),
                     'status' => 'pending_payment',
-                    'price_cents' => $rule->price_cents,
+                    'price_cents' => $this->slots->priceCents($rule, $startUtc),
                     'vat_rate' => $rule->vat_rate,
-                    'is_arena' => $court->is_arena,
+                    'is_arena' => false,
                     'hold_expires_at' => now()->addMinutes(self::HOLD_MINUTES),
                 ]));
             } catch (QueryException $e) {
@@ -90,9 +96,10 @@ class BookingService
     }
 
     /** Paiement simulé de l'alpha. En production, la confirmation viendra de la notification signée de Stripe. */
-    public function confirmPayment(Booking $booking, User $user): Booking
+    /** @param array<int, int> $items quantité par identifiant d'article */
+    public function confirmPayment(Booking $booking, User $user, ?string $gameMode = null, array $items = []): Booking
     {
-        return DB::transaction(function () use ($booking, $user) {
+        return DB::transaction(function () use ($booking, $user, $gameMode, $items) {
             $booking = Booking::whereKey($booking->id)->lockForUpdate()->firstOrFail();
             if ($user->status !== 'active') {
                 throw new BookingException('Votre compte est suspendu. Le paiement est refusé.');
@@ -101,28 +108,59 @@ class BookingService
                 throw new BookingException('Les dix minutes sont écoulées. Le créneau a été libéré, rien n’a été débité.');
             }
             $player = $booking->players()->where('is_organizer', true)->firstOrFail();
+            // Un mode arcade remplace le prix classique par le tarif arcade du même créneau (+14 €).
+            if ($gameMode !== null && $gameMode !== 'classic') {
+                $rule = $this->slots->priceFor($booking->starts_at, true);
+                $supplement = $this->slots->arcadeSupplement($booking->starts_at);
+                if ($rule === null || $supplement === null) {
+                    throw new BookingException('Le mode arcade n’est pas disponible sur ce créneau.');
+                }
+                // Le supplément s'ajoute au prix déjà bloqué, remise flash comprise.
+                $price = $booking->price_cents + $supplement;
+                $booking->update(['is_arena' => true, 'game_mode' => $gameMode, 'pricing_rule_id' => $rule->id, 'price_cents' => $price, 'vat_rate' => $rule->vat_rate]);
+                $player->update(['share_cents' => $price]);
+            }
+            $lines = [['label' => $booking->court->name.($booking->is_arena ? ' – partie Arena' : '').' – '.Clock::local($booking->starts_at)->format('d/m/Y H:i'), 'quantity' => 1, 'unit' => $player->share_cents, 'vat' => (float) $booking->vat_rate]];
+            foreach ($this->reserveItems($booking, array_filter($items)) as $item) {
+                $lines[] = ['label' => $item->product->name, 'quantity' => $item->quantity, 'unit' => $item->unit_price_cents, 'vat' => (float) $item->vat_rate];
+            }
+            $amount = array_sum(array_map(fn ($l) => $l['quantity'] * $l['unit'], $lines));
             $payment = Payment::create([
                 'booking_id' => $booking->id,
                 'booking_player_id' => $player->id,
                 'payer_id' => $user->id,
                 'method' => 'card',
                 'provider_reference' => 'test_'.Str::uuid(),
-                'amount_cents' => $player->share_cents,
+                'amount_cents' => $amount,
                 'status' => 'succeeded',
                 'paid_at' => now(),
             ]);
-            $net = (int) round($payment->amount_cents / (1 + (float) $booking->vat_rate / 100));
-            Invoice::create([
+            // La TVA se calcule ligne par ligne : 6 % sur le terrain, 21 % sur le matériel.
+            foreach ($lines as &$l) {
+                $l['total'] = $l['quantity'] * $l['unit'];
+                $l['net'] = (int) round($l['total'] / (1 + $l['vat'] / 100));
+            }
+            unset($l);
+            $net = array_sum(array_column($lines, 'net'));
+            $invoice = Invoice::create([
                 'number' => $this->nextNumber('invoice', 'F'),
                 'booking_id' => $booking->id,
                 'payment_id' => $payment->id,
                 'issued_at' => now(),
                 'customer_name' => $user->name,
+                'customer_company' => $user->company_name,
+                'customer_vat' => $user->vat_number,
                 'net_cents' => $net,
                 'vat_rate' => $booking->vat_rate,
-                'vat_cents' => $payment->amount_cents - $net,
-                'total_cents' => $payment->amount_cents,
+                'vat_cents' => $amount - $net,
+                'total_cents' => $amount,
             ]);
+            foreach ($lines as $l) {
+                InvoiceLine::create([
+                    'invoice_id' => $invoice->id, 'label' => $l['label'], 'quantity' => $l['quantity'], 'unit_price_cents' => $l['unit'],
+                    'vat_rate' => $l['vat'], 'net_cents' => $l['net'], 'vat_cents' => $l['total'] - $l['net'], 'total_cents' => $l['total'],
+                ]);
+            }
             $player->update(['status' => 'paid']);
             AccessPass::create([
                 'booking_player_id' => $player->id,
@@ -170,6 +208,33 @@ class BookingService
 
             return $booking->fresh();
         });
+    }
+
+    /**
+     * Réserve les articles demandés pour le créneau. Le stock vaut par créneau : un article loué
+     * sur une partie qui chevauche celle-ci n'est pas disponible.
+     *
+     * @param  array<int, int>  $items
+     * @return list<BookingItem>
+     */
+    private function reserveItems(Booking $booking, array $items): array
+    {
+        $reserved = [];
+        // Verrouiller les articles évite que deux paiements simultanés louent la même raquette.
+        $products = Product::whereIn('id', array_keys($items))->where('is_active', true)->lockForUpdate()->get()->keyBy('id');
+        foreach ($items as $productId => $quantity) {
+            $product = $products->get($productId) ?? throw new BookingException('Cet article n’est plus proposé.');
+            $used = (int) BookingItem::where('product_id', $product->id)
+                ->whereHas('booking', fn ($q) => $q->whereIn('status', Booking::ACTIVE)->where('id', '!=', $booking->id)
+                    ->where('starts_at', '<', $booking->ends_at)->where('ends_at', '>', $booking->starts_at))
+                ->sum('quantity');
+            if ($product->kind === 'rental' && $used + $quantity > $product->stock) {
+                throw new BookingException("Plus assez de « {$product->name} » sur ce créneau : il en reste ".max(0, $product->stock - $used).'.');
+            }
+            $reserved[] = BookingItem::create(['booking_id' => $booking->id, 'product_id' => $product->id, 'quantity' => $quantity, 'unit_price_cents' => $product->price_cents, 'vat_rate' => $product->vat_rate])->setRelation('product', $product);
+        }
+
+        return $reserved;
     }
 
     /** Jeton du QR code, recalculable à l'affichage. Seule son empreinte est stockée. */

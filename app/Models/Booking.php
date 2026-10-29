@@ -10,7 +10,9 @@ class Booking extends Model
 {
     public const ACTIVE = ['pending_payment', 'confirmed', 'used', 'frozen'];
 
-    protected $fillable = ['public_id', 'court_id', 'organizer_id', 'pricing_rule_id', 'starts_at', 'ends_at', 'status', 'price_cents', 'vat_rate', 'is_arena', 'hold_expires_at', 'cancelled_at'];
+    public const GAME_MODES = ['arcade'];
+
+    protected $fillable = ['public_id', 'court_id', 'organizer_id', 'pricing_rule_id', 'starts_at', 'ends_at', 'status', 'price_cents', 'vat_rate', 'is_arena', 'hold_expires_at', 'cancelled_at', 'game_mode'];
 
     protected function casts(): array
     {
@@ -48,6 +50,11 @@ class Booking extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(BookingItem::class);
     }
 
     public function invoices(): HasMany
